@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap');
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #f4f6fb;
+  font-family: "Roboto", sans-serif;
+  color: #222;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+h2 {
+  color: #3358e0;
+  margin-bottom: 24px;
+  font-size: 2rem;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+form {
+  background: #fff;
+  padding: 36px 32px 28px 32px;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(51, 88, 224, 0.10);
+  min-width: 340px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #d1d9e6;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+  background: #f8faff;
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: #3358e0;
+  box-shadow: 0 0 0 2px #eaf0ff;
+}
+
+label {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+input[type="checkbox"] {
+  accent-color: #3358e0;
+  width: 18px;
+  height: 18px;
+}
+
+button[type="submit"] {
+  background: linear-gradient(90deg, #4f8cff 0%, #3358e0 100%);
+  color: #fff;
+  padding: 13px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79, 140, 255, 0.13);
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 8px;
+}
+
+button[type="submit"]:hover {
+  background: linear-gradient(90deg, #3358e0 0%, #4f8cff 100%);
+  transform: translateY(-2px) scale(1.03);
+}
+
+input::placeholder {
+  color: #b0b8c9;
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  form {
+    padding: 18px 8px 16px 8px;
+    min-width: unset;
+  }
+  h2 {
+    font-size: 1.3rem;
+  }
+}

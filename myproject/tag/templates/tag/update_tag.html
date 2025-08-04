@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cập nhật thông tin thẻ</title>
+    <link rel="stylesheet" href="{% static 'tag/css/update_tag.css' %}">
+</head>
+<body>
+<h2>Cập nhật thông tin thẻ</h2>
+<form action="{% url 'tag:update_tag' tag.id %}" method="POST">
+    {% csrf_token %}
+    <input type="text" name="name" value="{{ tag.name }}" placeholder="Tên thẻ" required><br><br>
+    <button type="submit">Cập nhật thẻ</button>
+</form>
+<script src="{% static 'tag/js/update_tag.js' %}"></script>
+</body>
+</html>
