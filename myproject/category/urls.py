@@ -4,9 +4,9 @@ from . import views
 app_name = 'category'
 urlpatterns = [
     path('',views.index, name='index'),
-    # path('api/tag', views.api_tag, name='api_tag'),
-    # path('add_tag',views.add_tag, name='add_tag'),
-    # path('update_tag/<int:id>',views.update_tag, name='update_tag'),
-    # path('delete_tag/<int:id>', views.delete_tag, name='delete_tag'),
+    path('api/category', views.api_category, name='api_category'),
+    path('add_category',views.add_category, name='add_category'),
+    path('update_category/<int:id>',views.update_category, name='update_category'),
+    path('delete_category/<int:id>', views.delete_category, name='delete_category'),
     
 ]

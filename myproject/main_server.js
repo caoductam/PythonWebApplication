@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 const servers = [
   { name: 'user', path: './user/backend.js' },
   { name: 'tag', path: './tag/backend.js'},
+  { name: 'category', path: './category/backend.js'},
 ];
 
 servers.forEach(server => {

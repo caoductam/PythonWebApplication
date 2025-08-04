@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Thêm danh mục mới</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'category/css/add_category.css' %}">
+</head>
+<body>
+<h2>Thêm danh mục mới</h2>
+<form action="/category/add_category" method="POST">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Tên danh mục" required><br><br>
+    <input type="text" name="description" placeholder="Mô tả" required><br><br>
+    <select name="parent_id" id="parent-select">
+        <option value="">-- Không có danh mục cha --</option>
+        <!-- Option sẽ được render bằng JS -->
+    </select><br><br>
+    <button type="submit">Thêm danh mục mới</button>
+</form>
+<script src="{% static 'category/js/add_category.js' %}"></script>
+</body>
+</html>

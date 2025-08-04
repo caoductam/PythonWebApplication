@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cập nhật thông tin danh mục</title>
+    <link rel="stylesheet" href="{% static 'category/css/update_category.css' %}">
+</head>
+<body>
+<h2>Cập nhật thông tin danh mục</h2>
+<form action="{% url 'category:update_category' category.id %}" method="POST">
+    {% csrf_token %}
+    <input type="text" name="name" value="{{ category.name }}" required><br><br>
+    <input type="text" name="description" value="{{ category.description }}" required><br><br>
+<select name="parent_id" id="parent-select">
+    <option value="">-- Không có danh mục cha --</option>
+    {% for cat in categories %}
+        {% if cat.id != category.id %}
+            <option value="{{ cat.id }}" {% if category.parent_id == cat.id %}selected{% endif %}>
+                {{ cat.id }} - {{ cat.name }}
+            </option>
+        {% endif %}
+    {% endfor %}
+</select><br><br>
+    <button type="submit">Cập nhật danh mục</button>
+</form>
+<script src="{% static 'category/js/update_category.js' %}"></script>
+</body>
+</html>

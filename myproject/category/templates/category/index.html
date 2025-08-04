@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Danh sách danh mục</title>
+    <link rel="stylesheet" href="{% static 'category/css/index.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Danh sách danh mục</h2>
+            <a href="{% url 'category:add_category' %}" class="btn add-btn">+ Thêm danh mục mới</a>
+        </div>
+        <div style="margin-bottom: 18px;">
+        <input type="text" id="search-input" placeholder="Tìm kiếm danh mục...">
+        </div>
+        <table class="category-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Mô tả danh mục</th>
+                    <th>Parent ID</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.id }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description }}</td>
+                    <td>{{ category.parent_id}}</td>
+                    <td>
+                        <a href="{% url 'category:update_category' category.id %}" class="btn edit-btn">Sửa</a>
+                        <form action="{% url 'category:delete_category' category.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn delete-btn" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center;">Không có danh mục nào.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{% static 'category/js/index.js' %}"></script>
+</body>
+</html>
