@@ -1,7 +1,7 @@
 const { spawn } = require('child_process');
 
 const servers = [
-  { name: 'user', path: './user/server.js' }
+  { name: 'user', path: './user/backend.js' }
 ];
 
 servers.forEach(server => {

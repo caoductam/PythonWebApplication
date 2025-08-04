@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cập nhật thông tin người dùng</title>
+    <link rel="stylesheet" href="{% static 'user/css/update_user.css' %}">
+</head>
+<body>
+<h2>Cập nhật thông tin người dùng</h2>
+<form action="{% url 'user:update_user' user.id %}" method="POST">
+    {% csrf_token %}
+    <input type="text" name="username" value="{{ user.username }}" placeholder="Tên người dùng" required><br><br>
+    <input type="password" name="password" placeholder="Mật khẩu mới (nếu đổi)"><br><br>
+    <input type="text" name="full_name" value="{{ user.full_name }}" placeholder="Họ tên" required><br><br>
+    <input type="email" name="email" value="{{ user.email }}" placeholder="Email" required><br><br>
+    <select name="role" required>
+        <option value="">— Chọn vai trò—</option>
+        <option value="Admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+        <option value="Editor" {% if user.role == 'editor' %}selected{% endif %}>Editor</option>
+        <option value="Viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
+    </select><br><br>
+    <label>
+        <input type="checkbox" name="active" value="yes" {% if user.is_active %}checked{% endif %}>
+        Hoạt động
+    </label><br><br>
+    <button type="submit">Cập nhật người dùng</button>
+</form>
+<script src="{% static 'user/js/update_user.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Danh sách người dùng</title>
+    <link rel="stylesheet" href="{% static 'user/css/index.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Danh sách người dùng</h2>
+            <a href="{% url 'user:add_user' %}" class="btn add-btn">+ Thêm người dùng mới</a>
+        </div>
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên người dùng</th>
+                    <th>Mật khẩu</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.password}}</td>
+                    <td>{{ user.full_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>
+                        <span class="{% if user.is_active %}active{% else %}inactive{% endif %}">
+                            {% if user.is_active %}Hoạt động{% else %}Ngừng hoạt động{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'user:update_user' user.id %}" class="btn edit-btn">Sửa</a>
+                        <a href="{% url 'user:delete_user' user.id %}" class="btn delete-btn" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center;">Không có người dùng nào.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{% static 'user/js/index.js' %}"></script>
+</body>
+</html>
