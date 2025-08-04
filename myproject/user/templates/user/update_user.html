@@ -13,11 +13,11 @@
     <input type="password" name="password" placeholder="Mật khẩu mới (nếu đổi)"><br><br>
     <input type="text" name="full_name" value="{{ user.full_name }}" placeholder="Họ tên" required><br><br>
     <input type="email" name="email" value="{{ user.email }}" placeholder="Email" required><br><br>
-    <select name="role" required>
+    <select name="role">
         <option value="">— Chọn vai trò—</option>
-        <option value="Admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
-        <option value="Editor" {% if user.role == 'editor' %}selected{% endif %}>Editor</option>
-        <option value="Viewer" {% if user.role == 'viewer' %}selected{% endif %}>Viewer</option>
+        <option value="Admin" {% if user.role == 'Admin' %}selected{% endif %}>Admin</option>
+        <option value="Editor" {% if user.role == 'Editor' %}selected{% endif %}>Editor</option>
+        <option value="Viewer" {% if user.role == 'Viewer' %}selected{% endif %}>Viewer</option>
     </select><br><br>
     <label>
         <input type="checkbox" name="active" value="yes" {% if user.is_active %}checked{% endif %}>

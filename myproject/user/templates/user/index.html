@@ -11,10 +11,13 @@
             <h2>Danh sách người dùng</h2>
             <a href="{% url 'user:add_user' %}" class="btn add-btn">+ Thêm người dùng mới</a>
         </div>
+        <div style="margin-bottom: 18px;">
+        <input type="text" id="search-input" placeholder="Tìm kiếm người dùng...">
+        </div>
         <table class="user-table">
             <thead>
                 <tr>
-                    <th>STT</th>
+                    <th>ID</th>
                     <th>Tên người dùng</th>
                     <th>Mật khẩu</th>
                     <th>Họ tên</th>
@@ -27,9 +30,9 @@
             <tbody>
                 {% for user in users %}
                 <tr>
-                    <td>{{ forloop.counter }}</td>
+                    <td>{{ user.id }}</td>
                     <td>{{ user.username }}</td>
-                    <td>{{ user.password}}</td>
+                    <td>{{ user.password }}</td>
                     <td>{{ user.full_name }}</td>
                     <td>{{ user.email }}</td>
                     <td>{{ user.role }}</td>
@@ -40,7 +43,10 @@
                     </td>
                     <td>
                         <a href="{% url 'user:update_user' user.id %}" class="btn edit-btn">Sửa</a>
-                        <a href="{% url 'user:delete_user' user.id %}" class="btn delete-btn" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</a>
+                        <form action="{% url 'user:delete_user' user.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn delete-btn" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</button>
+                        </form>
                     </td>
                 </tr>
                 {% empty %}

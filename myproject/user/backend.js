@@ -6,6 +6,9 @@ const con = require('../connection');
 const app = express();
 const PORT = 3000;
 
+const cors = require('cors');
+app.use(cors());
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -97,6 +100,17 @@ app.post('/update_user', (req, res) => {
             return res.send(`<p>${msg}</p><a href="/update_user/${id}">Quay lại sửa</a>`);
         }
         res.redirect('/user');
+    });
+});
+
+app.delete('/api/user/:id/delete', (req, res) => {
+    const id = req.params.id;
+    con.query('DELETE FROM user WHERE id = ?', [id], (err, result) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: 'User không tồn tại' });
+        }
+        res.json({ success: true });
     });
 });
 

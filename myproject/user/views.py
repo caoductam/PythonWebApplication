@@ -75,3 +75,14 @@ def update_user(request, id):
             columns = [col[0] for col in cursor.description]
             user = dict(zip(columns, row))
         return render(request, 'user/update_user.html', {'user': user})
+    
+def delete_user(request, id):
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM user WHERE id = %s", [id])
+            if cursor.fetchone()[0] == 0:
+                return HttpResponse("User không tồn tại", status=404)
+            cursor.execute("DELETE FROM user WHERE id = %s", [id])
+        return redirect('user:index')
+    else:
+        return HttpResponse("Phương thức không hợp lệ", status=405)

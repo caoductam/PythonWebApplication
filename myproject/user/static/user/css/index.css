@@ -124,6 +124,20 @@ body {
     transform: scale(1.05);
 }
 
+#search-input {
+    margin-bottom: 12px;
+    font-size: 1rem;
+    border: 1.2px solid #d1d9e6;
+    border-radius: 6px;
+    padding: 8px 12px;
+    width: 300px;
+    transition: border 0.2s;
+}
+#search-input:focus {
+    border-color: #3358e0;
+    outline: none;
+}
+
 @media (max-width: 700px) {
     .container {
         padding: 10px 2px;
@@ -136,3 +150,4 @@ body {
         font-size: 0.95rem;
     }
 }
+
