@@ -76,7 +76,7 @@ def add_document_api(request):
                 created_by=created_by
             )
             # Trả về url để frontend chuyển hướng
-            return JsonResponse({'success': True, 'document_id': doc.id, 'redirect_url': '/documents/'})
+            return JsonResponse({'success': True, 'document_id': doc.id, 'redirect_url': '/document/'})
         except Category.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Category not found'})
         except User.DoesNotExist:

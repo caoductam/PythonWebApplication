@@ -13,6 +13,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/media', express.static(path.join(__dirname, 'media')));
+app.use(express.json());
 
 // Route trả về file HTML tĩnh cho danh sách user
 app.get('/document', (req, res) => {

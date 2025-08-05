@@ -82,8 +82,8 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 
     // Lấy dữ liệu từ form
     const data = {
-        title: document.getElementById('title').value,
-        description: document.getElementById('description').value,
+        title: document.getElementById('file_title').value,
+        description: document.getElementById('file_description').value,
         file_path: uploadedFileInfo.file_url,
         file_name: uploadedFileInfo.file_name,
         file_type: uploadedFileInfo.file_type,
@@ -100,7 +100,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            window.location.href = data.redirect_url || '/'; // hoặc trang index
+            window.location.href = data.redirect_url || '/document'; // hoặc trang index
         } else {
             alert('Lỗi: ' + (data.error || 'Không xác định'));
         }
