@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Danh sách tài liệu</title>
+    <link rel="stylesheet" href="{% static 'document/css/index.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Danh sách tài liệu</h2>
+            {% comment %} <a href="{% url 'document:add_document' %}" class="btn add-btn">+ Thêm tài liệu mới</a> {% endcomment %}
+            <a href="#" class="btn add-btn">+ Thêm tài liệu mới</a>
+        </div>
+        <div style="margin-bottom: 18px;">
+        <input type="text" id="search-input" placeholder="Tìm kiếm tài liệu...">
+        </div>
+        <table class="document-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tiêu đề</th>
+                    <th>Mô tả</th>
+                    <th>Đường dẫn tài liệu</th>
+                    <th>Tên tài liệu</th>
+                    <th>Loại tài liệu</th>
+                    <th>Kích thước tài liệu</th>
+                    <th>Danh mục</th>
+                    <th>Người tạo</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                <tr>
+                    <td>{{ document.id }}</td>
+                    <td>{{ document.title }}</td>
+                    <td>{{ document.description }}</td>
+                    <td>{{ document.file_path}}</td>
+                    <td>{{ document.file_name}}</td>
+                    <td>{{ document.file_type}}</td>
+                    <td>{{ document.file_size}}</td>
+                    <td>{{ document.category_id_id}}</td>
+                    <td>{{ document.created_by_id}}</td>
+
+                    <td>
+                        <a href="{% url 'document:update_document' document.id %}" class="btn edit-btn">Sửa</a>
+                        <form action="{% url 'document:delete_document' document.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn delete-btn" onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center;">Không có tài liệu nào.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{% static 'document/js/index.js' %}"></script>
+</body>
+</html>

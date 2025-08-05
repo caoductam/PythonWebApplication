@@ -4,6 +4,7 @@ const servers = [
   { name: 'user', path: './user/backend.js' },
   { name: 'tag', path: './tag/backend.js'},
   { name: 'category', path: './category/backend.js'},
+  { name: 'document', path: './document/backend.js'},
 ];
 
 servers.forEach(server => {

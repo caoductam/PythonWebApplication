@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Thêm tài liệu mới</title>
+    <link rel="stylesheet" href="{% static 'document/css/add_document.css' %}">
+    {% comment %} <script>
+        function updateFileInfo() {
+            var input = document.getElementById('id_file_path');
+            var file = input.files[0];
+            if (file) {
+                document.getElementById('file_name').value = file.name;
+                document.getElementById('file_type').value = file.type;
+                document.getElementById('file_size').value = file.size;
+            } else {
+                document.getElementById('file_name').value = '';
+                document.getElementById('file_type').value = '';
+                document.getElementById('file_size').value = '';
+            }
+        }
+    </script> {% endcomment %}
+</head>
+<body>
+    <h2>Thêm tài liệu mới</h2>
+    <form id="uploadForm" method="post" enctype="multipart/form-data" action="/document/add_document">
+        {% csrf_token %}
+        {% comment %} <div>
+            <label for="id_title">Tiêu đề:</label>
+            {{ form.title }}
+        </div>
+        <div>
+            <label for="id_description">Mô tả:</label>
+            {{ form.description }}
+        </div>
+        <div>
+            <label for="id_file_path">Tệp tài liệu:</label>
+            {{ form.file_path }}
+        </div>
+        <div>
+            <label for="file_name">Tên tệp:</label>
+            <input type="text" id="file_name" name="file_name" readonly>
+        </div>
+        <div>
+            <label for="file_type">Loại tệp:</label>
+            <input type="text" id="file_type" name="file_type" readonly>
+        </div>
+        <div>
+            <label for="file_size">Kích thước (bytes):</label>
+            <input type="text" id="file_size" name="file_size" readonly>
+        </div>
+        <div>
+            <label for="id_category_id">Danh mục:</label>
+            {{ form.category_id }}
+        </div>
+        {{ form.created_by }} {% endcomment %}
+        <input type="text" id="file_title" name="file_title" placeholder="Tiêu đề" required>
+        {% comment %} <input type="text" id="file_description" name="file_description" readonly> {% endcomment %}
+        <textarea id="file_description" name="file_description" placeholder="Mô tả tài liệu"></textarea>
+        <input type="file" id="file_upload" name="file_upload" required>
+        <input type="text" id="file_path" name="file_path" placeholder="Đường dẫn file" readonly>
+        <input type="text" id="file_name" name="file_name" placeholder="Tên file" readonly>
+        <input type="text" id="file_type" name="file_type" placeholder="Loại file" readonly>
+        <input type="text" id="file_size" name="file_size" placeholder="Kích thước file" readonly>
+        <select name="category_id_id" id="category_id_id">
+            <option value="">-- Danh mục --</option>
+        <!-- Option sẽ được render bằng JS -->
+        </select>
+        <select name="created_by_id" id="created_by_id">
+            <option value="">-- Người tạo --</option>
+        <!-- Option sẽ được render bằng JS -->
+        </select>
+        <button type="submit">Thêm mới</button>
+    </form>
+    <script src="{% static 'document/js/add_document.js' %}"></script>
+    {% comment %} <script>
+        document.getElementById('id_file_path').addEventListener('change', updateFileInfo);
+    </script> {% endcomment %}
+</body>
+</html>
