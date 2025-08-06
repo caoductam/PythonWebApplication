@@ -74,37 +74,37 @@ def add_document_api(request):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-# def update_document(request, id):
-#     document = get_object_or_404(Document, id=id)
-#     categories = Category.objects.all()
-#     users = User.objects.all()
-#     if request.method == 'POST':
-#         document.title = request.POST.get('title')
-#         document.description = request.POST.get('description')
-#         document.category_id = request.POST.get('category_id')
-#         document.created_by_id = request.POST.get('created_by')
-#         file = request.FILES.get('file_upload')
-#         if file:
-#             file_name = file.name
-#             file_type = file.content_type
-#             file_size = file.size
-#             file_save_path = os.path.join('documents', file_name)
-#             full_path = os.path.join(settings.MEDIA_ROOT, file_save_path)
-#             with open(full_path, 'wb+') as destination:
-#                 for chunk in file.chunks():
-#                     destination.write(chunk)
-#             file_url = settings.MEDIA_URL + 'documents/' + file_name
-#             document.file_path = file_url
-#             document.file_name = file_name
-#             document.file_type = file_type
-#             document.file_size = file_size
-#         document.save()
-#         return redirect('document:index')
-#     return render(request, 'document/update_document.html', {
-#         'document': document,
-#         'categories': categories,
-#         'users': users
-#     })
+def update_document(request, id):
+    # document = get_object_or_404(Document, id=id)
+    # categories = Category.objects.all()
+    # users = User.objects.all()
+    # if request.method == 'POST':
+    #     document.title = request.POST.get('title')
+    #     document.description = request.POST.get('description')
+    #     document.category_id = request.POST.get('category_id')
+    #     document.created_by_id = request.POST.get('created_by')
+    #     file = request.FILES.get('file_upload')
+    #     if file:
+    #         file_name = file.name
+    #         file_type = file.content_type
+    #         file_size = file.size
+    #         file_save_path = os.path.join('documents', file_name)
+    #         full_path = os.path.join(settings.MEDIA_ROOT, file_save_path)
+    #         with open(full_path, 'wb+') as destination:
+    #             for chunk in file.chunks():
+    #                 destination.write(chunk)
+    #         file_url = settings.MEDIA_URL + 'documents/' + file_name
+    #         document.file_path = file_url
+    #         document.file_name = file_name
+    #         document.file_type = file_type
+    #         document.file_size = file_size
+    #     document.save()
+    #     return redirect('document:index')
+    return render(request, 'document/update_document.html', {
+        # 'document': document,
+        # 'categories': categories,
+        # 'users': users
+    })
 
 # def delete_document(request, id):
 #     if request.method == 'POST' or request.method == 'DELETE':

@@ -17,6 +17,6 @@ urlpatterns = [
     # CRUD views
     path('', views.index, name='index'),
     path('add_document/', views.add_document, name='add_document'),
-    # path('update/<int:id>/', views.update_document, name='update_document'),
+    path('update/<int:id>/', views.update_document, name='update_document'),
     # path('delete/<int:id>/', views.delete_document, name='delete_document'),
 ]
