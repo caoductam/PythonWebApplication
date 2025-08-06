@@ -47,17 +47,23 @@ body {
     transform: translateY(-2px) scale(1.03);
 }
 
+/* .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
 .document-table {
     width: 100%;
     border-collapse: collapse;
     background: #fff;
     border-radius: 10px;
     overflow: hidden;
-}
+} */
 
 .document-table th, .document-table td {
-    padding: 14px 10px;
+    padding: 8px 12px;
     text-align: left;
+    /* white-space: nowrap; */
 }
 
 .document-table th {
@@ -77,6 +83,51 @@ body {
 
 .document-table td {
     font-size: 1rem;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Đặt min-width cho bảng để không bị bóp nhỏ, cho phép cuộn ngang */
+.document-table {
+    min-width: 1200px;
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Giới hạn chiều rộng các cột dài, hiển thị ... khi tràn */
+.document-table th:nth-child(3), 
+.document-table td:nth-child(3),
+.document-table th:nth-child(2), /* Mô tả */
+.document-table td:nth-child(2) {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.document-table th:nth-child(5), /* Tên tài liệu */
+.document-table td:nth-child(5),
+.document-table th:nth-child(4), /* Đường dẫn tài liệu */
+.document-table td:nth-child(4),
+.document-table th:nth-child(8),
+.document-table td:nth-child(8) {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* Nếu muốn các cột khác cũng giới hạn, thêm max-width tương tự */
+.document-table th, .document-table td {
+    max-width: 180px;
+    box-sizing: border-box;
 }
 
 .active {

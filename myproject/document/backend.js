@@ -37,7 +37,7 @@ app.get('/api/documents', (req, res) => {
 
     let baseSql = `
         FROM document d
-        LEFT JOIN category c ON d.category_id = c.id
+        LEFT JOIN category c ON d.category_id_id = c.id
         LEFT JOIN user u ON d.created_by_id = u.id
     `;
     let whereSql = '';
@@ -51,7 +51,10 @@ app.get('/api/documents', (req, res) => {
     // Đếm tổng số bản ghi
     let countSql = `SELECT COUNT(*) as total ${baseSql} ${whereSql}`;
     con.query(countSql, params, (err, countResult) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('Count SQL error:', err);
+            return res.status(500).json({ error: err.message });
+        }
         let total = countResult[0].total;
 
         // Lấy dữ liệu phân trang
@@ -61,12 +64,14 @@ app.get('/api/documents', (req, res) => {
             ORDER BY d.id DESC
             LIMIT ? OFFSET ?
         `;
-        // Tạo mảng params mới để tránh ảnh hưởng đến params của countSql
         let dataParams = params.slice();
         dataParams.push(pageSize, offset);
 
         con.query(dataSql, dataParams, (err, documents) => {
-            if (err) return res.status(500).json({ error: err.message });
+            if (err) {
+                console.error('Data SQL error:', err);
+                return res.status(500).json({ error: err.message });
+            }
             res.json({
                 results: documents,
                 total: total,
