@@ -117,7 +117,7 @@ body {
 .document-table td:nth-child(4),
 .document-table th:nth-child(8),
 .document-table td:nth-child(8) {
-    max-width: 250px;
+    max-width: 270px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
