@@ -134,7 +134,7 @@ app.post('/api/add_document', (req, res) => {
         created_by_id
     } = req.body;
 
-    const sql = `INSERT INTO document (title, description, file_path, file_name, file_type, file_size, category_id, created_by_id)
+    const sql = `INSERT INTO document (title, description, file_path, file_name, file_type, file_size, category_id_id, created_by_id)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id, created_by_id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
