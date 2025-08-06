@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'tag',
     'category',
     'document',
+    'frontend',
 ]
 
 MIDDLEWARE = [

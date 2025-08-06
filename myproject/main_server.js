@@ -5,6 +5,7 @@ const servers = [
   { name: 'tag', path: './tag/backend.js'},
   { name: 'category', path: './category/backend.js'},
   { name: 'document', path: './document/backend.js'},
+  { name: 'frontend', path: './frontend/backend.js'}
 ];
 
 servers.forEach(server => {

@@ -25,6 +25,7 @@ urlpatterns = [
     path('tag/', include('tag.urls')),
     path('category/', include('category.urls')),
     path('document/', include('document.urls')),
+    path('frontend/', include('frontend.urls')),
 ]
 
 if settings.DEBUG:
