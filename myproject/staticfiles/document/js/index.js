@@ -33,8 +33,8 @@ function fetchDocuments(page = 1, search = '') {
                         <td>${doc.category_name || ''}</td>
                         <td>${doc.created_by_username || ''}</td>
                         <td>
-                            <a href="/document/update/${doc.id}/" class="btn-edit">Sửa</a>
-                            <button class="btn-delete" data-id="${doc.id}">Xoá</button>
+                            <a href="/document/update/${doc.id}/" class="btn edit-btn">Sửa</a>
+                            <button class="btn delete-btn" data-id="${doc.id}">Xoá</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
