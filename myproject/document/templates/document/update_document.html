@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cập nhật tài liệu</title>
+    <link rel="stylesheet" href="{% static 'document/css/update_document.css' %}">
+</head>
+<body>
+<div class="container">
+    <h2>Cập nhật tài liệu</h2>
+    <form id="updateForm" enctype="multipart/form-data">
+        <input type="hidden" id="doc_id" value="{{ doc_id }}">
+        <input type="text" id="title" name="title" placeholder="Tiêu đề" required>
+        <textarea id="description" name="description" placeholder="Mô tả tài liệu"></textarea>
+        <input type="file" id="file_upload" name="file_upload">
+        <input type="text" id="file_path" name="file_path" placeholder="Đường dẫn file" readonly>
+        <input type="text" id="file_name" name="file_name" placeholder="Tên file" readonly>
+        <input type="text" id="file_type" name="file_type" placeholder="Loại file" readonly>
+        <input type="text" id="file_size" name="file_size" placeholder="Kích thước file" readonly>
+        <select name="category_id" id="category_id" required>
+            <option value="">-- Danh mục --</option>
+        </select>
+        <select name="created_by_id" id="created_by_id" required>
+            <option value="">-- Người tạo --</option>
+        </select>
+        <button type="submit">Cập nhật</button>
+    </form>
+</div>
+<script src="{% static 'document/js/update_document.js' %}"></script>
+
+</body>
+</html>
