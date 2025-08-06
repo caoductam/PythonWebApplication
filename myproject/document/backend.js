@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 const con = require('../connection');
 
 const app = express();
@@ -15,49 +16,96 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/media', express.static(path.join(__dirname, 'media')));
 app.use(express.json());
 
-// Route trả về file HTML tĩnh cho danh sách user
+// Đảm bảo thư mục upload tồn tại
+const uploadDir = path.join(__dirname, 'media', 'documents');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Route trả về file HTML tĩnh cho danh sách document
 app.get('/document', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'document.html'));
 });
 
-// API trả về dữ liệu user dạng JSON (cho JS phía client fetch)
-app.get('/api/document', (req, res) => {
-    con.query('SELECT * FROM document', (err, documents) => {
+// API trả về dữ liệu document dạng JSON (đã join với category và user, có phân trang và tìm kiếm)
+app.get('/api/documents', (req, res) => {
+    let page = parseInt(req.query.page) || 1;
+    let pageSize = parseInt(req.query.page_size) || 10;
+    let search = req.query.search ? req.query.search.trim() : '';
+
+    let offset = (page - 1) * pageSize;
+
+    let baseSql = `
+        FROM document d
+        LEFT JOIN category c ON d.category_id = c.id
+        LEFT JOIN user u ON d.created_by_id = u.id
+    `;
+    let whereSql = '';
+    let params = [];
+
+    if (search) {
+        whereSql = "WHERE d.title LIKE ?";
+        params.push(`%${search}%`);
+    }
+
+    // Đếm tổng số bản ghi
+    let countSql = `SELECT COUNT(*) as total ${baseSql} ${whereSql}`;
+    con.query(countSql, params, (err, countResult) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(documents);
+        let total = countResult[0].total;
+
+        // Lấy dữ liệu phân trang
+        let dataSql = `
+            SELECT d.*, c.name AS category_name, u.username AS created_by_username
+            ${baseSql} ${whereSql}
+            ORDER BY d.id DESC
+            LIMIT ? OFFSET ?
+        `;
+        // Tạo mảng params mới để tránh ảnh hưởng đến params của countSql
+        let dataParams = params.slice();
+        dataParams.push(pageSize, offset);
+
+        con.query(dataSql, dataParams, (err, documents) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({
+                results: documents,
+                total: total,
+                page: page,
+                page_size: pageSize,
+                total_pages: Math.ceil(total / pageSize)
+            });
+        });
     });
 });
 
-// Category
-app.get('/api/category_id', (req, res) => {
+// API lấy danh sách category
+app.get('/api/categories', (req, res) => {
     con.query('SELECT id, name FROM category', (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results); // Trả về mảng object
+        res.json(results);
     });
 });
 
-// User
-app.get('/api/user_id', (req, res) => {
+// API lấy danh sách user
+app.get('/api/users', (req, res) => {
     con.query('SELECT id, username, role FROM user', (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results); // Trả về mảng object
+        res.json(results);
     });
 });
 
 // Cấu hình lưu file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'media/documents/');
+        cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalname); // hoặc thêm timestamp cho unique
+        cb(null, file.originalname); // Có thể thêm timestamp nếu muốn unique
     }
 });
 const upload = multer({ storage: storage });
 
-// Cho phép truy cập file tĩnh
-app.use('/media', express.static(path.join(__dirname, 'media')));
-
+// API upload file
 app.post('/api/upload', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     res.json({
@@ -77,18 +125,16 @@ app.post('/api/add_document', (req, res) => {
         file_name,
         file_type,
         file_size,
-        category_id_id,
+        category_id,
         created_by_id
     } = req.body;
 
-    const sql = `INSERT INTO document (title, description, file_path, file_name, file_type, file_size, category_id_id, created_by_id)
+    const sql = `INSERT INTO document (title, description, file_path, file_name, file_type, file_size, category_id, created_by_id)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-    con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id_id, created_by_id], (err, result) => {
+    con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id, created_by_id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, document_id: result.insertId });
     });
 });
-
-
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
