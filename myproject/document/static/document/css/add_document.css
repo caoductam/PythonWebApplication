@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap');
+
 /* Reset */
 * {
   margin: 0;
@@ -18,6 +19,14 @@ body {
   justify-content: center;
 }
 
+/* Container for form */
+.container {
+  width: 100%;
+  max-width: 420px;
+  margin: 40px auto;
+  padding: 0 8px;
+}
+
 /* Title */
 h2 {
   color: #3358e0;
@@ -33,13 +42,14 @@ form {
   padding: 25px 32px 28px 32px;
   border-radius: 14px;
   box-shadow: 0 4px 24px rgba(51, 88, 224, 0.10);
-  min-width: 340px;
+  min-width: 320px;
   max-width: 100%;
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-/* Input, Select, Checkbox */
+/* Input, Select, Textarea */
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -56,10 +66,12 @@ textarea {
   outline: none;
   margin-top: 5px;
   margin-bottom: 5px;
+  resize: vertical;
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: #3358e0;
   box-shadow: 0 0 0 2px #eaf0ff;
 }
@@ -101,15 +113,27 @@ button[type="submit"]:hover {
 }
 
 /* Placeholder */
-input::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: #b0b8c9;
   opacity: 1;
 }
 
+/* Readonly fields */
+input[readonly] {
+  background: #f0f3fa;
+  color: #888;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
+  .container {
+    padding: 0 2px;
+    max-width: 100%;
+  }
   form {
-    padding: 18px 8px 16px 8px;
+    padding: 14px 4px 12px 4px;
     min-width: unset;
   }
   h2 {

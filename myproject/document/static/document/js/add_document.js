@@ -1,8 +1,8 @@
 // 1. Load danh mục và user
-fetch('http://localhost:3003/api/category_id')
+fetch('http://localhost:3003/api/categories')
   .then(res => res.json())
   .then(categories => {
-      const select = document.getElementById('category_id_id');
+      const select = document.getElementById('category_id');
       categories.forEach(cat => {
           const option = document.createElement('option');
           option.value = cat.id;
@@ -14,10 +14,10 @@ fetch('http://localhost:3003/api/category_id')
       console.error('Lỗi fetch category:', err);
   });
 
-fetch('http://localhost:3003/api/user_id')
+fetch('http://localhost:3003/api/users')
   .then(res => res.json())
   .then(users => {
-      const select = document.getElementById('created_by_id');
+      const select = document.getElementById('created_by');
       users.forEach(user => {
           const option = document.createElement('option');
           option.value = user.id;
@@ -82,14 +82,14 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 
     // Lấy dữ liệu từ form
     const data = {
-        title: document.getElementById('file_title').value,
-        description: document.getElementById('file_description').value,
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
         file_path: uploadedFileInfo.file_url,
         file_name: uploadedFileInfo.file_name,
         file_type: uploadedFileInfo.file_type,
         file_size: uploadedFileInfo.file_size,
-        category_id_id: document.getElementById('category_id_id').value,
-        created_by_id: document.getElementById('created_by_id').value
+        category_id: document.getElementById('category_id').value,
+        created_by: document.getElementById('created_by').value
     };
 
     fetch('http://localhost:3003/api/add_document', {
@@ -110,7 +110,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
 
 // 4. Hiệu ứng focus cho input/select (giữ nguyên như bạn đã làm)
 document.addEventListener('DOMContentLoaded', function () {
-  const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], select');
+  const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], select, textarea');
   inputs.forEach(input => {
     input.addEventListener('focus', function () {
       this.style.background = '#eaf0ff';
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Hiệu ứng hover cho checkbox label
+  // Hiệu ứng hover cho checkbox label (nếu có)
   const checkboxLabel = document.querySelector('label input[type="checkbox"]');
   if (checkboxLabel) {
     const label = checkboxLabel.parentElement;
