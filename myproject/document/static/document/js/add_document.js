@@ -89,7 +89,7 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         file_type: uploadedFileInfo.file_type,
         file_size: uploadedFileInfo.file_size,
         category_id: document.getElementById('category_id').value,
-        created_by: document.getElementById('created_by').value
+        created_by_id: document.getElementById('created_by').value
     };
 
     fetch('http://localhost:3003/api/add_document', {

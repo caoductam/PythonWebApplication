@@ -74,47 +74,47 @@ def add_document_api(request):
             return JsonResponse({'success': False, 'error': str(e)})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-def update_document(request, id):
-    document = get_object_or_404(Document, id=id)
-    categories = Category.objects.all()
-    users = User.objects.all()
-    if request.method == 'POST':
-        document.title = request.POST.get('title')
-        document.description = request.POST.get('description')
-        document.category_id = request.POST.get('category_id')
-        document.created_by_id = request.POST.get('created_by')
-        file = request.FILES.get('file_upload')
-        if file:
-            file_name = file.name
-            file_type = file.content_type
-            file_size = file.size
-            file_save_path = os.path.join('documents', file_name)
-            full_path = os.path.join(settings.MEDIA_ROOT, file_save_path)
-            with open(full_path, 'wb+') as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
-            file_url = settings.MEDIA_URL + 'documents/' + file_name
-            document.file_path = file_url
-            document.file_name = file_name
-            document.file_type = file_type
-            document.file_size = file_size
-        document.save()
-        return redirect('document:index')
-    return render(request, 'document/update_document.html', {
-        'document': document,
-        'categories': categories,
-        'users': users
-    })
+# def update_document(request, id):
+#     document = get_object_or_404(Document, id=id)
+#     categories = Category.objects.all()
+#     users = User.objects.all()
+#     if request.method == 'POST':
+#         document.title = request.POST.get('title')
+#         document.description = request.POST.get('description')
+#         document.category_id = request.POST.get('category_id')
+#         document.created_by_id = request.POST.get('created_by')
+#         file = request.FILES.get('file_upload')
+#         if file:
+#             file_name = file.name
+#             file_type = file.content_type
+#             file_size = file.size
+#             file_save_path = os.path.join('documents', file_name)
+#             full_path = os.path.join(settings.MEDIA_ROOT, file_save_path)
+#             with open(full_path, 'wb+') as destination:
+#                 for chunk in file.chunks():
+#                     destination.write(chunk)
+#             file_url = settings.MEDIA_URL + 'documents/' + file_name
+#             document.file_path = file_url
+#             document.file_name = file_name
+#             document.file_type = file_type
+#             document.file_size = file_size
+#         document.save()
+#         return redirect('document:index')
+#     return render(request, 'document/update_document.html', {
+#         'document': document,
+#         'categories': categories,
+#         'users': users
+#     })
 
-def delete_document(request, id):
-    if request.method == 'POST' or request.method == 'DELETE':
-        document = get_object_or_404(Document, id=id)
-        document.delete()
-        if request.is_ajax() or request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'success': True})
-        return redirect('document:index')
-    # Nếu là GET, trả về lỗi rõ ràng
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+# def delete_document(request, id):
+#     if request.method == 'POST' or request.method == 'DELETE':
+#         document = get_object_or_404(Document, id=id)
+#         document.delete()
+#         if request.is_ajax() or request.headers.get('x-requested-with') == 'XMLHttpRequest':
+#             return JsonResponse({'success': True})
+#         return redirect('document:index')
+#     # Nếu là GET, trả về lỗi rõ ràng
+#     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def api_document_list(request):
     page = int(request.GET.get('page', 1))
@@ -161,3 +161,54 @@ def api_document_list(request):
         'page_size': page_size,
         'total_pages': (total + page_size - 1) // page_size
     })
+    
+
+@csrf_exempt
+def api_document_detail(request, id):
+    try:
+        doc = Document.objects.select_related('category_id', 'created_by').get(id=id)
+        data = {
+            'id': doc.id,
+            'title': doc.title,
+            'description': doc.description,
+            'file_path': doc.file_path,
+            'file_name': doc.file_name,
+            'file_type': doc.file_type,
+            'file_size': doc.file_size,
+            'category_id': doc.category_id.id if doc.category_id else None,
+            'created_by_id': doc.created_by.id if doc.created_by else None,
+        }
+        return JsonResponse(data)
+    except Document.DoesNotExist:
+        return JsonResponse({'error': 'Not found'}, status=404)
+
+@csrf_exempt
+def api_document_update(request, id):
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            doc = Document.objects.get(id=id)
+            doc.title = data.get('title', doc.title)
+            doc.description = data.get('description', doc.description)
+            doc.file_path = data.get('file_path', doc.file_path)
+            doc.file_name = data.get('file_name', doc.file_name)
+            doc.file_type = data.get('file_type', doc.file_type)
+            doc.file_size = data.get('file_size', doc.file_size)
+            doc.category_id_id = data.get('category_id', doc.category_id_id)
+            doc.created_by_id = data.get('created_by_id', doc.created_by_id)
+            doc.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+
+@csrf_exempt
+def api_document_delete(request, id):
+    if request.method == 'DELETE':
+        try:
+            doc = Document.objects.get(id=id)
+            doc.delete()
+            return JsonResponse({'success': True})
+        except Document.DoesNotExist:
+            return JsonResponse({'error': 'Not found'}, status=404)
+    return JsonResponse({'error': 'Invalid method'}, status=405)

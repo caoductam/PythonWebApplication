@@ -10,6 +10,9 @@ urlpatterns = [
     path('api/users/', views.api_user, name='api_user'),
     path('api/upload/', views.upload_file, name='upload_file'),
     path('api/add_document/', views.add_document_api, name='add_document_api'),  # thêm tài liệu mới
+    path('api/documents/<int:id>/', views.api_document_detail, name='api_document_detail'),
+    path('api/documents/<int:id>/update/', views.api_document_update, name='api_document_update'),
+    path('api/documents/<int:id>/delete/', views.api_document_delete, name='api_document_delete'),
 
     # CRUD views
     path('', views.index, name='index'),

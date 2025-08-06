@@ -44,17 +44,13 @@ function fetchDocuments(page = 1, search = '') {
             renderPagination(response.page, response.total_pages);
 
             // Gắn lại sự kiện xoá sau khi render bảng
-            document.querySelectorAll('.btn-delete').forEach(btn => {
+            document.querySelectorAll('.btn.delete-btn').forEach(btn => {
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
                     if (confirm('Bạn chắc chắn muốn xoá tài liệu này?')) {
                         const docId = this.getAttribute('data-id');
-                        fetch(`/document/delete/${docId}/`, {
-                            method: 'POST',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRFToken': getCookie('csrftoken')
-                            }
+                        fetch(`http://127.0.0.1:3003/api/documents/${docId}`, {
+                            method: 'DELETE'
                         })
                         .then(res => {
                             if (!res.ok) throw new Error('Delete failed');
@@ -98,7 +94,7 @@ function renderPagination(current, total) {
     });
 }
 
-// Hàm lấy CSRF token
+// Hàm lấy CSRF token (nếu dùng Django, không cần cho NodeJS API)
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {

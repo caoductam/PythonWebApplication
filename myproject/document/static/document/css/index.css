@@ -63,7 +63,18 @@ body {
 .document-table th, .document-table td {
     padding: 8px 12px;
     text-align: left;
+    border-right: 1px solid #e0e6f7;
     /* white-space: nowrap; */
+}
+
+.document-table th:first-child,
+.document-table td:first-child {
+    border-left: 1px solid #e0e6f7;
+}
+
+.document-table th:last-child,
+.document-table td:last-child {
+    border-right: 1px solid #e0e6f7;
 }
 
 .document-table th {
@@ -115,6 +126,8 @@ body {
 .document-table td:nth-child(5),
 .document-table th:nth-child(4), /* Đường dẫn tài liệu */
 .document-table td:nth-child(4),
+.document-table th:nth-child(6),
+.document-table td:nth-child(6),
 .document-table th:nth-child(8),
 .document-table td:nth-child(8),
 .document-table th:nth-child(7),

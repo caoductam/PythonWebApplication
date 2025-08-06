@@ -61,7 +61,7 @@ app.get('/api/documents', (req, res) => {
         let dataSql = `
             SELECT d.*, c.name AS category_name, u.username AS created_by_username
             ${baseSql} ${whereSql}
-            ORDER BY d.id DESC
+            ORDER BY d.id ASC
             LIMIT ? OFFSET ?
         `;
         let dataParams = params.slice();
@@ -138,7 +138,57 @@ app.post('/api/add_document', (req, res) => {
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
     con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id, created_by_id], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
+        console.error(err);
         res.json({ success: true, document_id: result.insertId });
+    });
+});
+
+// API lấy chi tiết 1 document (GET)
+app.get('/api/documents/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = `
+        SELECT d.*, c.name AS category_name, u.username AS created_by_username
+        FROM document d
+        LEFT JOIN category c ON d.category_id_id = c.id
+        LEFT JOIN user u ON d.created_by_id = u.id
+        WHERE d.id = ?
+    `;
+    con.query(sql, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+        res.json(results[0]);
+    });
+});
+
+// API cập nhật document (PUT)
+app.put('/api/documents/:id', (req, res) => {
+    const id = req.params.id;
+    const {
+        title,
+        description,
+        file_path,
+        file_name,
+        file_type,
+        file_size,
+        category_id,
+        created_by_id
+    } = req.body;
+
+    const sql = `UPDATE document SET title=?, description=?, file_path=?, file_name=?, file_type=?, file_size=?, category_id_id=?, created_by_id=?
+                 WHERE id=?`;
+    con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id, created_by_id, id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
+// API xoá document (DELETE)
+app.delete('/api/documents/:id', (req, res) => {
+    const id = req.params.id;
+    const sql = `DELETE FROM document WHERE id=?`;
+    con.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
     });
 });
 
