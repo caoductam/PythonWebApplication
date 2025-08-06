@@ -6,7 +6,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     msg.style.color = '#3358e0';
     msg.textContent = 'Đang kiểm tra...';
 
-    fetch('http://localhost:3003/api/login', {
+    fetch('http://localhost:3004/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -18,7 +18,7 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
             msg.textContent = data.message || 'Đăng nhập thành công!';
             // Ví dụ: chuyển trang sau 1s
             setTimeout(() => {
-                window.location.href = '/'; // hoặc trang dashboard
+                // window.location.href = '/'; // hoặc trang dashboard
             }, 1000);
         } else {
             msg.style.color = '#e03a3a';

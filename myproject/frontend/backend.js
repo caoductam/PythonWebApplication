@@ -35,7 +35,7 @@ app.post('/api/login', (req, res) => {
             return res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu.' });
         }
         const user = results[0];
-        if (user.active === 1) {
+        if (user.is_active === 1) {
             // Đăng nhập thành công
             return res.json({ success: true, message: 'Đăng nhập thành công!', user: { id: user.id, username: user.username, role: user.role } });
         } else {
