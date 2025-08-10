@@ -17,7 +17,8 @@ app.use('/media', express.static(path.join(__dirname, 'media')));
 app.use(express.json());
 
 // Đảm bảo thư mục upload tồn tại
-const uploadDir = path.join(__dirname, 'media', 'documents');
+// Đường dẫn tuyệt đối đến media/documents của Django project
+const uploadDir = path.join(__dirname, '..', 'media', 'documents');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }

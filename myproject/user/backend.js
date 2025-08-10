@@ -114,6 +114,16 @@ app.delete('/api/user/:id/delete', (req, res) => {
     });
 });
 
+// API lấy user theo id
+app.get('/api/user/:id', (req, res) => {
+    const userId = req.params.id;
+    con.query('SELECT * FROM user WHERE id = ?', [userId], (err, users) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!users.length) return res.status(404).json({ error: 'User not found' });
+        res.json(users[0]);
+    });
+});
+
 app.get('/', (req, res) => {
     res.redirect('/user');
 });

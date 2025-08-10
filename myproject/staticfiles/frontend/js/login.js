@@ -1,4 +1,4 @@
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', function (e) {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -11,36 +11,36 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
     })
-    .then(async res => {
-        const data = await res.json();
-        if (res.ok && data.success) {
-            msg.style.color = '#1bb934';
-            msg.textContent = data.message || 'Đăng nhập thành công!';
-            // Lấy role và id từ response
-            const user = data.user;
-            if (user && user.role) {
-                let homeUrl = '/';
-                if (user.role.toLowerCase() === 'admin') {
-                    homeUrl = `/admin_home.html?id=${user.id}`;
-                } else if (user.role.toLowerCase() === 'editor') {
-                    homeUrl = `/editor_home.html?id=${user.id}`;
-                } else if (user.role.toLowerCase() === 'viewer') {
-                    homeUrl = `/viewer_home.html?id=${user.id}`;
+        .then(async res => {
+            const data = await res.json();
+            if (res.ok && data.success) {
+                msg.style.color = '#1bb934';
+                msg.textContent = data.message || 'Đăng nhập thành công!';
+                // Lấy role và id từ response
+                const user = data.user;
+                if (user && user.role) {
+                    let homeUrl = '/';
+                    if (user.role === 'Admin') {
+                        homeUrl = `/frontend/admin_home/?id=${user.id}`;
+                    } else if (user.role === 'Editor') {
+                        homeUrl = `/frontend/editor_home/?id=${user.id}`;
+                    } else if (user.role === 'Viewer') {
+                        homeUrl = `/frontend/viewer_home/?id=${user.id}`;
+                    }
+                    setTimeout(() => {
+                        window.location.href = homeUrl;
+                    }, 1000);
+                } else {
+                    msg.style.color = '#e03a3a';
+                    msg.textContent = 'Không xác định được vai trò người dùng!';
                 }
-                setTimeout(() => {
-                    window.location.href = homeUrl;
-                }, 1000);
             } else {
                 msg.style.color = '#e03a3a';
-                msg.textContent = 'Không xác định được vai trò người dùng!';
+                msg.textContent = data.message || 'Đăng nhập thất bại!';
             }
-        } else {
+        })
+        .catch(err => {
             msg.style.color = '#e03a3a';
-            msg.textContent = data.message || 'Đăng nhập thất bại!';
-        }
-    })
-    .catch(err => {
-        msg.style.color = '#e03a3a';
-        msg.textContent = 'Lỗi kết nối server!';
-    });
+            msg.textContent = 'Lỗi kết nối server!';
+        });
 });
