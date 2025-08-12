@@ -736,6 +736,7 @@ body {
     color: #2563eb;
     font-weight: 500;
 }
+
 #profileForm input {
     width: 94%;
     padding: 10px 12px;
@@ -747,9 +748,11 @@ body {
     outline: none;
     transition: border 0.2s;
 }
+
 #profileForm input:focus {
     border-color: #2563eb;
 }
+
 .profile-save-btn {
     width: 100%;
     background: #2563eb;
@@ -762,6 +765,7 @@ body {
     cursor: pointer;
     transition: background 0.2s;
 }
+
 .profile-save-btn:hover {
     background: #1746b0;
 }

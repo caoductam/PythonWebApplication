@@ -1,189 +1,163 @@
-//Chuyển đổi định dạng file
-function mimeToShort(mime) {
-  switch (mime) {
-    case "application/pdf":
-      return "PDF";
-    case "application/msword":
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-      return "Word";
-    case "application/vnd.ms-excel":
-    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-      return "Excel";
-    case "application/vnd.ms-powerpoint":
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-      return "PowerPoint";
-    case "image/jpeg":
-    case "image/jpg":
-      return "JPEG";
-    case "image/png":
-      return "PNG";
-    case "image/gif":
-      return "GIF";
-    case "text/plain":
-      return "Text";
-    case "application/zip":
-    case "application/x-zip-compressed":
-      return "ZIP";
-    case "application/x-rar-compressed":
-      return "RAR";
-    case "audio/mpeg":
-      return "MP3";
-    case "video/mp4":
-      return "MP4";
-    // Thêm các loại khác nếu cần
-    default:
-      return mime;
+// editor_add.js
+document.addEventListener('DOMContentLoaded', () => {
+  // — 1. Hàm chuyển MIME → định dạng ngắn
+  function mimeToShort(mime) {
+    switch (mime) {
+      case 'application/pdf': return 'PDF';
+      case 'application/msword':
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return 'Word';
+      case 'application/vnd.ms-excel':
+      case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        return 'Excel';
+      case 'application/vnd.ms-powerpoint':
+      case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+        return 'PowerPoint';
+      case 'image/jpeg':
+      case 'image/jpg': return 'JPEG';
+      case 'image/png':    return 'PNG';
+      case 'image/gif':    return 'GIF';
+      case 'text/plain':   return 'Text';
+      case 'application/zip':
+      case 'application/x-zip-compressed': return 'ZIP';
+      case 'application/x-rar-compressed': return 'RAR';
+      case 'audio/mpeg':   return 'MP3';
+      case 'video/mp4':    return 'MP4';
+      default: return mime;
+    }
   }
-}
-// 1. Load danh mục và user
-fetch('http://localhost:3003/api/categories')
-  .then(res => res.json())
-  .then(categories => {
-    const select = document.getElementById('category_id');
-    categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.id;
-      option.textContent = cat.id + ' - ' + cat.name;
-      select.appendChild(option);
-    });
-  })
-  .catch(err => {
-    console.error('Lỗi fetch category:', err);
-  });
 
-fetch('http://localhost:3003/api/users')
-  .then(res => res.json())
-  .then(users => {
-    const select = document.getElementById('created_by');
-    users.forEach(user => {
-      const option = document.createElement('option');
-      option.value = user.id;
-      option.textContent = user.id + ' - ' + user.username + ' - ' + user.role;
-      select.appendChild(option);
-    });
-  })
-  .catch(err => {
-    console.error('Lỗi fetch user:', err);
-  });
-
-// 2. Xử lý chọn file
-let uploadedFileInfo = null; // Lưu thông tin file sau khi upload
-
-document.getElementById('file_upload').addEventListener('change', function (e) {
-  const file = e.target.files[0];
-  if (file) {
-    document.getElementById('file_name').value = file.name;
-    document.getElementById('file_type').value = mimeToShort(file.type);
-    document.getElementById('file_size').value = file.size + ' bytes';
-    document.getElementById('file_path').value = '';
-
-    // Tự động upload file khi chọn
-    const formData = new FormData();
-    formData.append('file', file);
-    fetch('http://localhost:3003/api/upload', {
-      method: 'POST',
-      body: formData
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.file_url) {
-          document.getElementById('file_path').value = data.file_url;
-          document.getElementById('file_type').value = mimeToShort(data.file_type);
-          uploadedFileInfo = data; // Lưu lại để dùng khi submit
-        } else {
-          alert('Upload lỗi!');
-          uploadedFileInfo = null;
-        }
-      })
-      .catch(err => {
-        alert('Upload lỗi!');
-        uploadedFileInfo = null;
+  // — 2. Load danh mục lên <select id="category_id">
+  fetch('http://localhost:3003/api/categories')
+    .then(r => r.json())
+    .then(list => {
+      const sel = document.getElementById('category_id');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Chọn danh mục --</option>';
+      list.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.id;
+        o.textContent = `${c.id} – ${c.name}`;
+        sel.appendChild(o);
       });
-  } else {
-    document.getElementById('file_name').value = '';
-    document.getElementById('file_type').value = '';
-    document.getElementById('file_size').value = '';
-    document.getElementById('file_path').value = '';
-    uploadedFileInfo = null;
-  }
-});
-
-// 3. Submit form thêm tài liệu
-document.getElementById('uploadForm').addEventListener('submit', function (e) {
-  e.preventDefault();
-
-  // Kiểm tra đã upload file chưa
-  if (!uploadedFileInfo || !uploadedFileInfo.file_url) {
-    alert('Bạn phải chọn và upload file trước!');
-    return;
-  }
-
-  // Lấy dữ liệu từ form
-  const data = {
-    title: document.getElementById('title').value,
-    description: document.getElementById('description').value,
-    file_path: uploadedFileInfo.file_url,
-    file_name: uploadedFileInfo.file_name,
-    file_type: mimeToShort(uploadedFileInfo.file_type),
-    file_size: uploadedFileInfo.file_size,
-    category_id: document.getElementById('category_id').value,
-    created_by_id: document.getElementById('created_by').value
-  };
-
-  fetch('http://localhost:3003/api/add_document', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        window.location.href = data.redirect_url || '/document'; // hoặc trang index
-      } else {
-        alert('Lỗi: ' + (data.error || 'Không xác định'));
-      }
     })
-    .catch(err => alert('Lỗi gửi dữ liệu!'));
-});
+    .catch(err => console.error('Lỗi tải categories:', err));
 
-// 4. Hiệu ứng focus cho input/select (giữ nguyên như bạn đã làm)
-document.addEventListener('DOMContentLoaded', function () {
-  const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"], select, textarea');
-  inputs.forEach(input => {
-    input.addEventListener('focus', function () {
-      this.style.background = '#eaf0ff';
+  // — 3. Load user lên <select id="created_by">
+  fetch('http://localhost:3003/api/users')
+    .then(r => r.json())
+    .then(list => {
+      const sel = document.getElementById('created_by');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">-- Người tạo --</option>';
+      list.forEach(u => {
+        const o = document.createElement('option');
+        o.value = u.id;
+        o.textContent = `${u.id} – ${u.username} (${u.role})`;
+        sel.appendChild(o);
+      });
+    })
+    .catch(err => console.error('Lỗi tải users:', err));
+
+  // — 4. Xử lý chọn file & tự động upload
+  let uploadedFileInfo = null;
+  const fileInput = document.getElementById('file_upload');
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      // Hiển thị tạm file info
+      document.getElementById('file_name').value = file.name;
+      document.getElementById('file_type').value = mimeToShort(file.type);
+      document.getElementById('file_size').value = file.size;
+
+      // Upload ngay
+      const fd = new FormData();
+      fd.append('file', file);
+      fetch('http://localhost:3003/api/upload', {
+        method: 'POST',
+        body: fd
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (!res.file_url) throw new Error('Upload không trả file_url');
+          // Ghi lại
+          uploadedFileInfo = res;
+          document.getElementById('file_path').value = res.file_url;
+          document.getElementById('file_type').value = mimeToShort(res.file_type);
+        })
+        .catch(err => {
+          console.error('Lỗi upload:', err);
+          alert('Upload file thất bại!');
+          uploadedFileInfo = null;
+        });
     });
-    input.addEventListener('blur', function () {
-      this.style.background = '#f8faff';
+  }
+
+  // — 5. Submit form thêm tài liệu
+  const form = document.getElementById('uploadForm');
+  if (form) {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      // Bắt buộc phải upload thành công để có file_path
+      if (!uploadedFileInfo || !uploadedFileInfo.file_url) {
+        return alert('Bạn phải chọn và upload file trước!');
+      }
+
+      // Thu thập data
+      const data = {
+        title:         form.title.value.trim(),
+        description:   form.description.value.trim(),
+        file_path:     uploadedFileInfo.file_url,
+        file_name:     uploadedFileInfo.file_name,
+        file_type:     mimeToShort(uploadedFileInfo.file_type),
+        file_size:     uploadedFileInfo.file_size,
+        category_id:   form.category_id.value,
+        created_by_id: form.created_by.value
+      };
+
+      // Kiểm tra bắt buộc
+      if (!data.title || !data.category_id || !data.created_by_id) {
+        return alert('Vui lòng nhập tiêu đề, chọn danh mục và người tạo!');
+      }
+
+      // Gửi API thêm mới
+      fetch('http://localhost:3003/api/add_document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            alert('Đã thêm tài liệu thành công!');
+            // Redirect về trang danh sách
+            window.location.href = '/document';
+          } else {
+            alert('Lỗi thêm: ' + (res.error || 'Không xác định'));
+          }
+        })
+        .catch(err => {
+          console.error('Lỗi add_document:', err);
+          alert('Lỗi khi thêm tài liệu!');
+        });
     });
+  }
+
+  // — 6. Thêm hiệu ứng focus/blur cho input, select, textarea
+  const inputs = document.querySelectorAll('input, select, textarea');
+  inputs.forEach(el => {
+    el.addEventListener('focus', () => (el.style.background = '#eaf0ff'));
+    el.addEventListener('blur',  () => (el.style.background = '#f8faff'));
   });
 
-  // Hiệu ứng nút bấm
-  const submitBtn = document.querySelector('button[type="submit"]');
+  // Hiệu ứng button submit
+  const submitBtn = form?.querySelector('button[type="submit"]');
   if (submitBtn) {
-    submitBtn.addEventListener('mousedown', function () {
-      this.style.transform = 'scale(0.97)';
-    });
-    submitBtn.addEventListener('mouseup', function () {
-      this.style.transform = '';
-    });
-    submitBtn.addEventListener('mouseleave', function () {
-      this.style.transform = '';
-    });
-  }
-
-  // Hiệu ứng hover cho checkbox label (nếu có)
-  const checkboxLabel = document.querySelector('label input[type="checkbox"]');
-  if (checkboxLabel) {
-    const label = checkboxLabel.parentElement;
-    label.addEventListener('mouseenter', function () {
-      label.style.background = '#eaf0ff';
-      label.style.borderRadius = '6px';
-      label.style.padding = '2px 6px';
-    });
-    label.addEventListener('mouseleave', function () {
-      label.style.background = '';
-      label.style.padding = '';
-    });
+    submitBtn.addEventListener('mousedown', () => (submitBtn.style.transform = 'scale(0.97)'));
+    submitBtn.addEventListener('mouseup',   () => (submitBtn.style.transform = ''));
+    submitBtn.addEventListener('mouseleave',() => (submitBtn.style.transform = ''));
   }
 });

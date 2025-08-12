@@ -1,270 +1,338 @@
+// server.js
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const bodyParser = require('body-parser');
 const fs = require('fs');
-const con = require('../connection');
+const con = require('../connection'); // connection.js phải thiết lập charset utf8mb4
 
 const app = express();
 const PORT = 3004;
 
-const cors = require('cors');
-app.use(cors());
-
+// ===== CORS, Body-Parser, Static Files =====
+app.use(require('cors')());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/media', express.static(path.join(__dirname, 'media')));
-app.use(express.json());
 
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
+// ===== Tạo folder upload nếu chưa có =====
+const uploadDir = path.join(__dirname, '..', 'media', 'documents');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    if (!username || !password) {
-        return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ thông tin.' });
+// ===========================
+// 1) Upload file (Unicode)
+// ===========================
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => {
+        // Đọc originalname dưới binary và giải mã về UTF-8
+        let orig = file.originalname;
+        try {
+            orig = Buffer.from(orig, 'binary').toString('utf8');
+        } catch (e) { /* ignore */ }
+
+        // Sinh tên lưu: timestamp + tên gốc Unicode
+        const safeName = `${Date.now()}-${orig}`;
+        cb(null, safeName);
+    }
+});
+const upload = multer({ storage });
+
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'Chưa chọn file.' });
     }
 
-    // Kiểm tra username và password
-    const sql = 'SELECT * FROM user WHERE username = ? AND password = ? LIMIT 1';
-    con.query(sql, [username, password], (err, results) => {
-        if (err) {
-            console.error('Login error:', err);
-            return res.status(500).json({ success: false, message: 'Lỗi server.' });
-        }
-        if (results.length === 0) {
-            // Không tồn tại tài khoản
-            return res.status(401).json({ success: false, message: 'Sai tên đăng nhập hoặc mật khẩu.' });
-        }
-        const user = results[0];
-        if (user.is_active === 1) {
-            // Đăng nhập thành công
-            return res.json({ success: true, message: 'Đăng nhập thành công!', user: { id: user.id, username: user.username, role: user.role } });
-        } else {
-            // Tài khoản chưa active
-            return res.status(403).json({ success: false, message: 'Tài khoản chưa được kích hoạt.' });
-        }
+    // Encode filename để URL không lỗi ký tự
+    const encoded = encodeURIComponent(req.file.filename);
+    const file_path = `/media/documents/${encoded}`;
+
+    // Decode lại originalname để trả về cho client
+    let original = req.file.originalname;
+    try {
+        original = Buffer.from(original, 'binary').toString('utf8');
+    } catch (e) { /* ignore */ }
+
+    res.json({
+        success: true,
+        file_path,
+        file_name: original,
+        file_type: path.extname(original).substring(1).toUpperCase(),
+        file_size: req.file.size
     });
 });
 
-// API lấy thông tin user theo id
+// ===========================
+// 2) Authentication & Users
+// ===========================
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password)
+        return res.status(400).json({ success: false, message: 'Thiếu user hoặc pass.' });
+
+    con.query(
+        'SELECT * FROM user WHERE username=? AND password=? LIMIT 1',
+        [username, password],
+        (err, rows) => {
+            if (err) return res.status(500).json({ success: false, message: 'Lỗi server.' });
+            if (!rows.length) return res.status(401).json({ success: false, message: 'Sai thông tin.' });
+            const u = rows[0];
+            if (!u.is_active) return res.status(403).json({ success: false, message: 'Chưa kích hoạt.' });
+            res.json({ success: true, user: { id: u.id, username: u.username, role: u.role } });
+        }
+    );
+});
+
 app.get('/api/users/:id', (req, res) => {
-    const userId = req.params.id;
-    const sql = 'SELECT id, username, full_name, role, email, is_active FROM user WHERE id = ? LIMIT 1';
-    con.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error('User info error:', err);
-            return res.status(500).json({ error: 'Lỗi server.' });
+    con.query(
+        'SELECT id, username, full_name, role, email, is_active FROM user WHERE id=? LIMIT 1',
+        [req.params.id],
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Lỗi server.' });
+            if (!rows.length) return res.status(404).json({ error: 'Không tìm thấy user.' });
+            res.json(rows[0]);
         }
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Không tìm thấy user.' });
-        }
-        res.json(results[0]);
-    });
+    );
 });
 
 app.put('/api/users/:id', (req, res) => {
-    const userId = req.params.id;
     const { username, email, full_name } = req.body;
+    if (!username)
+        return res.status(400).json({ success: false, error: 'Thiếu username.' });
 
-    // Kiểm tra dữ liệu đầu vào
-    if (!username) {
-        return res.status(400).json({ success: false, error: 'Thiếu username!' });
-    }
-
-    // Nếu bảng user không có trường full_name, hãy sửa lại cho đúng tên trường
-    const sql = 'UPDATE user SET username = ?, email = ?, full_name = ? WHERE id = ?';
-    con.query(sql, [username, email, full_name, userId], (err, result) => {
-        if (err) {
-            console.error('Update user error:', err);
-            return res.status(500).json({ success: false, error: 'Lỗi server.' });
+    con.query(
+        'UPDATE user SET username=?, email=?, full_name=? WHERE id=?',
+        [username, email, full_name, req.params.id],
+        (err, result) => {
+            if (err) return res.status(500).json({ success: false, error: 'Lỗi server.' });
+            if (!result.affectedRows)
+                return res.status(404).json({ success: false, error: 'Không tìm thấy user.' });
+            res.json({ success: true });
         }
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ success: false, error: 'Không tìm thấy user.' });
-        }
-        res.json({ success: true });
-    });
+    );
 });
 
-const bcrypt = require('bcrypt'); // Nếu bạn dùng hash password, nên dùng bcrypt
-
 app.put('/api/users/:id/password', (req, res) => {
-    const userId = req.params.id;
     const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+        return res.status(400).json({ success: false, error: 'Thiếu thông tin.' });
 
-    if (!currentPassword || !newPassword) {
-        return res.status(400).json({ success: false, error: 'Thiếu thông tin!' });
-    }
-
-    // Lấy password hiện tại từ DB
-    const sql = 'SELECT password FROM user WHERE id = ? LIMIT 1';
-    con.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error('Lỗi truy vấn:', err);
-            return res.status(500).json({ success: false, error: 'Lỗi server.' });
-        }
-        if (results.length === 0) {
+    con.query('SELECT password FROM user WHERE id=? LIMIT 1', [req.params.id], (err, rows) => {
+        if (err) return res.status(500).json({ success: false, error: 'Lỗi server.' });
+        if (!rows.length)
             return res.status(404).json({ success: false, error: 'Không tìm thấy user.' });
-        }
+        if (rows[0].password !== currentPassword)
+            return res.status(401).json({ success: false, error: 'Mật khẩu hiện tại sai.' });
 
-        const dbPassword = results[0].password;
-        // Nếu bạn dùng plain text (KHÔNG KHUYẾN KHÍCH, chỉ demo)
-        if (dbPassword !== currentPassword) {
-            return res.status(401).json({ success: false, error: 'Mật khẩu hiện tại không đúng!' });
-        }
-        con.query('UPDATE user SET password = ? WHERE id = ?', [newPassword, userId], (err, result) => {
-            if (err) return res.status(500).json({ success: false, error: 'Lỗi server.' });
+        con.query('UPDATE user SET password=? WHERE id=?', [newPassword, req.params.id], err2 => {
+            if (err2) return res.status(500).json({ success: false, error: 'Lỗi server.' });
             res.json({ success: true });
         });
     });
 });
 
-// ... các route khác ...
+// ===========================
+// 3) Categories & Filetypes
+// ===========================
+app.get('/api/categories', (req, res) => {
+    con.query('SELECT id, name FROM category', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
 
-// API lấy số lượng tài liệu, danh mục, người dùng
+app.get('/api/categories_grid', (req, res) => {
+    const sql = `
+    SELECT c.id, c.name, c.description, COUNT(d.id) AS document_count
+      FROM category c
+      LEFT JOIN document d ON d.category_id = c.id
+    GROUP BY c.id, c.name, c.description
+    ORDER BY c.id
+  `;
+    con.query(sql, (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.get('/api/filetypes', (req, res) => {
+    con.query('SELECT DISTINCT file_type FROM document', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows.map(r => r.file_type));
+    });
+});
+
+// ===========================
+// 4) Stats (overview + file stats)
+// ===========================
 app.get('/api/stats', (req, res) => {
     const sql = `
-        SELECT 
-            (SELECT COUNT(*) FROM document) AS document_count,
-            (SELECT COUNT(*) FROM category) AS category_count,
-            (SELECT COUNT(*) FROM user) AS user_count
-    `;
-    con.query(sql, (err, results) => {
-        if (err) {
-            console.error('Stats error:', err);
-            return res.status(500).json({ error: 'Lỗi server.' });
-        }
-        res.json(results[0]);
+    SELECT
+      (SELECT COUNT(*) FROM document) AS document_count,
+      (SELECT COUNT(*) FROM category) AS category_count,
+      (SELECT COUNT(*) FROM user) AS user_count
+  `;
+    con.query(sql, (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Lỗi server.' });
+        res.json(rows[0]);
     });
 });
 
-// API lấy danh sách category
-app.get('/api/categories', (req, res) => {
-    con.query('SELECT id, name FROM category', (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+app.get('/api/file-stats', (req, res) => {
+    const sql = `
+    SELECT file_type, COUNT(*) AS count
+      FROM document
+    GROUP BY file_type
+    ORDER BY count DESC
+  `;
+    con.query(sql, (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Lỗi server.' });
+        res.json(rows);
     });
 });
 
-// API lấy danh sách định dạng
-app.get('/api/filetypes', (req, res) => {
-    con.query('SELECT DISTINCT file_type FROM document', (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        // Trả về mảng các file_type (nếu muốn)
-        const types = results.map(row => row.file_type);
-        res.json(types);
-    });
-});
-
-// API tìm kiếm tài liệu với filter: search, category_id, file_type
+// ===========================
+// 5) Search & List Documents
+// ===========================
 app.get('/api/search_documents', (req, res) => {
     let { search, category_id, file_type } = req.query;
     let sql = `
-        SELECT d.*, c.name AS category_name
-        FROM document d
-        LEFT JOIN category c ON d.category_id = c.id
-        WHERE 1=1
-    `;
-    let params = [];
-
+    SELECT d.*, c.name AS category_name
+      FROM document d
+      LEFT JOIN category c ON d.category_id = c.id
+     WHERE 1=1
+  `;
+    const params = [];
     if (search) {
-        sql += " AND (d.title LIKE ? OR d.description LIKE ?)";
+        sql += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
         params.push(`%${search}%`, `%${search}%`);
     }
     if (category_id) {
-        sql += " AND d.category_id = ?";
+        sql += ` AND d.category_id = ?`;
         params.push(category_id);
     }
     if (file_type) {
-        sql += " AND d.file_type = ?";
+        sql += ` AND d.file_type = ?`;
         params.push(file_type);
     }
-
-    sql += " ORDER BY d.id DESC";
-
-    con.query(sql, params, (err, results) => {
+    sql += ` ORDER BY d.id DESC`;
+    con.query(sql, params, (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+        res.json(rows);
     });
 });
 
-// API lấy danh sách tài liệu có phân trang và filter
+// Paginated documents
 app.get('/api/documents', (req, res) => {
     let { page = 1, page_size = 12, search, category_id, file_type } = req.query;
     page = parseInt(page);
     page_size = parseInt(page_size);
+    const offset = (page - 1) * page_size;
 
-    let sql = `
-     SELECT d.*, c.name AS category_name, u.username AS created_by_username
-FROM document d
-LEFT JOIN category c ON d.category_id_id = c.id
-LEFT JOIN user u ON d.created_by_id = u.id
-WHERE 1=1
-    `;
-    let params = [];
-
+    let baseSql = `
+    FROM document d
+    LEFT JOIN category c ON d.category_id = c.id
+    LEFT JOIN user     u ON d.created_by_id = u.id
+    WHERE 1=1
+  `;
+    const params = [];
     if (search) {
-        sql += " AND (d.title LIKE ? OR d.description LIKE ?)";
+        baseSql += ` AND (d.title LIKE ? OR d.description LIKE ?)`;
         params.push(`%${search}%`, `%${search}%`);
     }
     if (category_id) {
-        sql += " AND d.category_id = ?";
+        baseSql += ` AND d.category_id = ?`;
         params.push(category_id);
     }
     if (file_type) {
-        sql += " AND d.file_type = ?";
+        baseSql += ` AND d.file_type = ?`;
         params.push(file_type);
     }
 
-    // Đếm tổng số tài liệu phù hợp
-    let countSql = `SELECT COUNT(*) as total FROM (${sql}) as t`;
-    con.query(countSql, params, (err, countResult) => {
+    // Count
+    const countSql = `SELECT COUNT(*) AS total ${baseSql}`;
+    con.query(countSql, params, (err, cnt) => {
         if (err) return res.status(500).json({ error: err.message });
-        let total = countResult[0].total;
+        const total = cnt[0].total;
 
-        // Lấy dữ liệu phân trang
-        sql += " ORDER BY d.id DESC LIMIT ? OFFSET ?";
-        let dataParams = params.slice();
-        dataParams.push(page_size, (page - 1) * page_size);
-
-        con.query(sql, dataParams, (err, docs) => {
+        // Data
+        const dataSql = `
+      SELECT d.*, c.name AS category_name, u.username AS created_by_username
+      ${baseSql}
+      ORDER BY d.id DESC
+      LIMIT ? OFFSET ?
+    `;
+        con.query(dataSql, [...params, page_size, offset], (err, docs) => {
             if (err) return res.status(500).json({ error: err.message });
             res.json({
                 results: docs,
-                total: total,
-                page: page,
-                page_size: page_size,
+                total,
+                page,
+                page_size,
                 total_pages: Math.ceil(total / page_size)
             });
         });
     });
 });
 
-app.get('/api/categories_grid', (req, res) => {
+// ===========================
+// 6) My Documents CRUD
+// ===========================
+app.get('/api/my-documents/:userId', (req, res) => {
     const sql = `
-        SELECT c.id, c.name, c.description, COUNT(d.id) AS document_count
-        FROM category c
-        LEFT JOIN document d ON d.category_id_id = c.id
-        GROUP BY c.id, c.name, c.description
-        ORDER BY c.id
-    `;
-    con.query(sql, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
+    SELECT d.*, c.name AS category_name
+      FROM document d
+      LEFT JOIN category c ON d.category_id = c.id
+     WHERE d.created_by_id = ?
+     ORDER BY d.created_at DESC
+  `;
+    con.query(sql, [req.params.userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Lỗi server.' });
+        res.json(rows);
     });
 });
 
-// app.get('/api/users/:id', (req, res) => {
-//     const userId = req.params.id;
-//     const sql = 'SELECT id, username, role, email, created_at FROM user WHERE id = ? LIMIT 1';
-//     con.query(sql, [userId], (err, results) => {
-//         if (err) {
-//             console.error('User info error:', err);
-//             return res.status(500).json({ error: 'Lỗi server.' });
-//         }
-//         if (results.length === 0) {
-//             return res.status(404).json({ error: 'Không tìm thấy user.' });
-//         }
-//         res.json(results[0]);
-//     });
-// });
+app.post('/api/my-documents', (req, res) => {
+    const { title, description, file_path, file_name, file_type, file_size, category_id, created_by_id } = req.body;
+    if (!title || !file_path || !file_name || !file_type || !file_size || !category_id || !created_by_id) {
+        return res.status(400).json({ success: false, error: 'Thiếu thông tin!' });
+    }
+    const sql = `
+    INSERT INTO document
+      (title, description, file_path, file_name, file_type, file_size, category_id, created_by_id, created_at, updated_at)
+    VALUES(?,?,?,?,?,?,?,? ,NOW(),NOW())
+  `;
+    con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id, created_by_id], (err, result) => {
+        if (err) return res.status(500).json({ success: false, error: 'Lỗi server.' });
+        res.json({ success: true, document_id: result.insertId });
+    });
+});
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.put('/api/my-documents/:docId', (req, res) => {
+    const { title, description, file_path, file_name, file_type, file_size, category_id } = req.body;
+    const sql = `
+    UPDATE document SET
+      title=?, description=?, file_path=?, file_name=?, file_type=?, file_size=?, category_id=?, updated_at=NOW()
+    WHERE id=?
+  `;
+    con.query(sql, [title, description, file_path, file_name, file_type, file_size, category_id, req.params.docId], (err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Lỗi server.' });
+        res.json({ success: true });
+    });
+});
+
+app.delete('/api/my-documents/:docId', (req, res) => {
+    con.query('DELETE FROM document WHERE id=?', [req.params.docId], (err) => {
+        if (err) return res.status(500).json({ success: false, error: 'Lỗi server.' });
+        res.json({ success: true });
+    });
+});
+
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ error: 'API không tồn tại!' });
+});
+
+// Start server
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

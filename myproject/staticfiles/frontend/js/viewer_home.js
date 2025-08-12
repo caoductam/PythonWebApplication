@@ -166,53 +166,58 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Xử lý submit đổi mật khẩu
         if (changePasswordForm) {
-            changePasswordForm.addEventListener('submit', function (e) {
-                e.preventDefault();
+    changePasswordForm.addEventListener('submit', function (e) {
+        e.preventDefault();
 
-                // Lấy userId từ giao diện (giống như modal profile)
-                const userIdText = document.getElementById('userId').textContent;
-                const match = userIdText.match(/KATEX_INLINE_OPENID:\s*(\d+)KATEX_INLINE_CLOSE/);
-                const userId = match ? match[1] : null;
+        const userIdText = document.getElementById('userId').textContent;
+        const userId = userIdText.split('(ID:')[1]?.replace(/\D/g, '').trim() || null;
 
-                const currentPassword = document.getElementById('currentPassword').value.trim();
-                const newPassword = document.getElementById('newPassword').value.trim();
-                const confirmPassword = document.getElementById('confirmPassword').value.trim();
+        const currentPassword = document.getElementById('currentPassword').value.trim();
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
 
-                if (!userId || !currentPassword || !newPassword || !confirmPassword) {
-                    changePasswordMsg.textContent = 'Vui lòng nhập đầy đủ thông tin!';
-                    changePasswordMsg.style.color = '#e03a3a';
-                    return;
-                }
-                if (newPassword !== confirmPassword) {
-                    changePasswordMsg.textContent = 'Mật khẩu mới không khớp!';
-                    changePasswordMsg.style.color = '#e03a3a';
-                    return;
-                }
-
-                fetch(`http://localhost:3004/api/users/${userId}/password`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ currentPassword, newPassword })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            changePasswordMsg.style.color = '#1bb934';
-                            changePasswordMsg.textContent = 'Đổi mật khẩu thành công!';
-                            setTimeout(() => { changePasswordModal.style.display = 'none'; }, 1200);
-                        } else {
-                            changePasswordMsg.style.color = '#e03a3a';
-                            changePasswordMsg.textContent = data.error || 'Lỗi đổi mật khẩu!';
-                        }
-                    })
-                    .catch(() => {
-                        changePasswordMsg.style.color = '#e03a3a';
-                        changePasswordMsg.textContent = 'Lỗi khi đổi mật khẩu!';
-                    });
-            });
+        // 1. Kiểm tra nhập đủ
+        if (!userId || !currentPassword || !newPassword || !confirmPassword) {
+            changePasswordMsg.textContent = 'Vui lòng nhập đầy đủ thông tin!';
+            changePasswordMsg.style.color = '#e03a3a';
+            return;
         }
+
+        // 2. Kiểm tra new password và confirm password trước khi gửi API
+        if (newPassword !== confirmPassword) {
+            changePasswordMsg.textContent = 'Mật khẩu mới không khớp!';
+            changePasswordMsg.style.color = '#e03a3a';
+            return;
+        }
+
+        // 3. Gửi API kiểm tra current password và đổi mật khẩu
+        fetch(`http://localhost:3004/api/users/${userId}/password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success && data.error && data.error.includes('hiện tại')) {
+                changePasswordMsg.style.color = '#e03a3a';
+                changePasswordMsg.textContent = 'Phải điền đúng mật khẩu hiện tại!';
+            } else if (!data.success && data.error) {
+                changePasswordMsg.style.color = '#e03a3a';
+                changePasswordMsg.textContent = data.error;
+            } else if (data.success) {
+                changePasswordMsg.style.color = '#1bb934';
+                changePasswordMsg.textContent = 'Đổi mật khẩu thành công!';
+                setTimeout(() => { changePasswordModal.style.display = 'none'; }, 1200);
+            }
+        })
+        .catch(() => {
+            changePasswordMsg.style.color = '#e03a3a';
+            changePasswordMsg.textContent = 'Lỗi khi đổi mật khẩu!';
+        });
+    });
+}
+
     }
 
     // Close modals
@@ -231,27 +236,4 @@ document.addEventListener('DOMContentLoaded', function () {
         if (event.target === profileModal) profileModal.style.display = 'none';
         if (event.target === changePasswordModal) changePasswordModal.style.display = 'none';
     }
-    // Đổi mật khẩu demo
-    // if (changePasswordForm) {
-    //     changePasswordForm.addEventListener('submit', function (e) {
-    //         e.preventDefault();
-    //         const current = document.getElementById('currentPassword').value;
-    //         const newPass = document.getElementById('newPassword').value;
-    //         const confirm = document.getElementById('confirmPassword').value;
-    //         if (!current || !newPass || !confirm) {
-    //             changePasswordMsg.textContent = 'Vui lòng nhập đầy đủ thông tin!';
-    //             return;
-    //         }
-    //         if (newPass !== confirm) {
-    //             changePasswordMsg.textContent = 'Mật khẩu mới không khớp!';
-    //             return;
-    //         }
-    //         // Gửi API đổi mật khẩu ở đây (demo)
-    //         changePasswordMsg.style.color = '#1bb934';
-    //         changePasswordMsg.textContent = 'Đổi mật khẩu thành công (demo)!';
-    //         setTimeout(() => {
-    //             changePasswordModal.style.display = 'none';
-    //         }, 1200);
-    //     });
-    // }
 });
