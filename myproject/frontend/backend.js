@@ -24,8 +24,8 @@ app.use(cors({
 }));
 
 // 2. Middleware để xử lý body của request (JSON, form data)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // 3. Middleware để đọc cookie (BẮT BUỘC phải có trước session)
 app.use(cookieParser());
@@ -65,29 +65,10 @@ const storage = multer.diskStorage({
         cb(null, safeName);
     }
 });
-const upload = multer({ storage });
-
-// /**
-//  * Gửi một phản hồi thành công về cho client với cấu trúc nhất quán.
-//  * @param {object} res - Đối tượng response của Express.
-//  * @param {object | string} data - Dữ liệu cần gửi về.
-//  * @param {number} [statusCode=200] - Mã trạng thái HTTP.
-//  */
-// function sendSuccess(res, data, statusCode = 200) {
-//     res.status(statusCode).json({ success: true, data });
-// }
-
-// /**
-//  * Gửi một phản hồi lỗi về cho client với cấu trúc nhất quán.
-//  * Đồng thời log lỗi ra console của server để tiện cho việc gỡ lỗi.
-//  * @param {object} res - Đối tượng response của Express.
-//  * @param {string} message - Thông báo lỗi.
-//  * @param {number} [statusCode=500] - Mã trạng thái HTTP.
-//  */
-// function sendError(res, message, statusCode = 500) {
-//     console.error("API Error:", message); // Log lỗi ra server
-//     res.status(statusCode).json({ success: false, error: message });
-// }
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 } // 50MB, bạn có thể tăng lên nếu cần
+});
 
 // ==================================================
 // ===== API ROUTES =================================
@@ -243,9 +224,58 @@ app.delete('/api/users/:id', (req, res) => {
 // 3. API CATEGORIES
 // --------------------------------------------------
 app.get('/api/categories', (req, res) => {
-    con.query('SELECT id, name FROM category', (err, categories) => {
-        if (err) return sendError(res, 'Lỗi truy vấn danh mục.');
-        sendSuccess(res, categories);
+    con.query(
+        'SELECT id, name, description, parent_id FROM category',
+        (err, categories) => {
+            if (err) return sendError(res, 'Lỗi truy vấn danh mục.');
+            sendSuccess(res, categories);
+        }
+    );
+});
+
+app.get('/api/categories/:id', (req, res) => {
+    con.query(
+        'SELECT id, name, description, parent_id FROM category WHERE id = ?',
+        [req.params.id],
+        (err, rows) => {
+            if (err) return sendError(res, 'Lỗi truy vấn danh mục.');
+            if (rows.length === 0) return sendError(res, 'Không tìm thấy danh mục.', 404);
+            sendSuccess(res, rows[0]);
+        }
+    );
+});
+
+app.post('/api/categories', (req, res) => {
+    const { name, description, parent_id } = req.body;
+    if (!name) return sendError(res, 'Tên danh mục là bắt buộc.', 400);
+    const sql = 'INSERT INTO category (name, description, parent_id) VALUES (?, ?, ?)';
+    con.query(sql, [name, description, parent_id || null], (err, result) => {
+        if (err) {
+            if (err.code === 'ER_DUP_ENTRY') return sendError(res, 'Tên danh mục đã tồn tại.', 409);
+            return sendError(res, 'Lỗi CSDL khi tạo danh mục.');
+        }
+        sendSuccess(res, { id: result.insertId, name, description, parent_id }, 201);
+    });
+});
+
+app.put('/api/categories/:id', (req, res) => {
+    const { name, description, parent_id } = req.body;
+    if (!name) return sendError(res, 'Tên danh mục là bắt buộc.',400);
+    const sql = 'UPDATE category SET name = ?, description = ?, parent_id = ? WHERE id = ?';
+    con.query(sql, [name, description, parent_id || null, req.params.id],
+        (err, result) => {
+            if (err) return sendError(res, 'Lỗi CSDL khi cập nhật danh mục.');
+            if (result.affectedRows === 0) return sendError(res, 'Không tìm thấy danh mục để cập nhật.', 404);
+            sendSuccess(res, { message: 'Cập nhật thành công.' });
+        }
+    );
+}); 
+
+app.delete('/api/categories/:id', (req, res) => {
+    con.query('DELETE FROM category WHERE id = ?', [req.params.id], (err, result) => {
+        if (err) return sendError(res, 'Lỗi CSDL khi xóa danh mục.');
+        if (result.affectedRows === 0) return sendError(res, 'Không tìm thấy danh mục để xóa.', 404);
+        sendSuccess(res, { message: 'Xóa danh mục thành công.' });
     });
 });
 

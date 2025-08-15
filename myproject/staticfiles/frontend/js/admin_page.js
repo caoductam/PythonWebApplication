@@ -119,7 +119,7 @@ function fetchDocuments(page = 1, search = '') {
                         <td>${doc.id}</td>
                         <td>${doc.title}</td>
                         <td>${doc.description || ''}</td>
-                        <td><a href="${doc.file_path}" target="_blank">Xem file</a></td>
+                        <td><a href="http://127.0.0.1:3004${doc.file_path}" target="_blank">Xem file</a></td>
                         <td>${doc.file_name}</td>
                         <td>${doc.file_type}</td>
                         <td>${formatBytes(doc.file_size)}</td>
@@ -139,6 +139,41 @@ function fetchDocuments(page = 1, search = '') {
         .catch(err => {
             console.error('Lỗi chi tiết trong fetchDocuments:', err);
             tbody.innerHTML = `<tr><td colspan="10" class="text-center-error"><b>Lỗi tải tài liệu:</b> ${err.message}</td></tr>`;
+        });
+}
+
+function fetchCategories() {
+    fetch(`${API_BASE_URL}/categories`)
+        .then(res => res.json())
+        .then(res => {
+            if (!res.success) throw new Error(res.error);
+            const categories = res.data;
+            const tbody = document.querySelector('#categoryTable tbody');
+            tbody.innerHTML = '';
+            document.getElementById('categoryCount').textContent = categories.length;
+
+            if (categories.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Không có danh mục nào.</td></tr>`;
+            } else {
+                categories.forEach(category => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${category.id}</td>
+                        <td>${category.name}</td>
+                        <td>${category.description}</td>
+                        <td>${category.parent_id}</td>
+                        <td>
+                            <button class="btn edit-category-btn" data-id="${category.id}">Sửa</button>
+                            <button class="btn delete-category-btn" data-id="${category.id}">Xoá</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Lỗi khi tải danh sách danh mục:', err);
+            document.querySelector('#categoryTable tbody').innerHTML = `<tr><td colspan="5" class="text-center-error">Không thể tải dữ liệu danh mục!</td></tr>`;
         });
 }
 
@@ -548,6 +583,66 @@ function setupEditDocModal() {
     closeBtn.addEventListener('click', () => modal.style.display = 'none');
     form.addEventListener('submit', submitHandler);
 }
+
+function setupAddCategoryModal() {
+    const modal = document.getElementById('addCategoryModal');
+    const openBtn = document.getElementById('openAddCategoryModalBtn');
+    const closeBtn = document.getElementById('closeAddCategoryModal');
+    const form = document.getElementById('addCategoryForm');
+    const msg = document.getElementById('addCategoryMsg');
+
+    if (!modal || !openBtn || !closeBtn || !form) return;
+
+    const openModal = () => {
+        form.reset();
+        msg.textContent = '';
+        modal.style.display = 'flex';
+        Promise.all([
+            fetch(`${API_BASE_URL}/categories`).then(res => res.json())
+        ]).then(([catRes]) => {
+            if (!catRes.success || !userRes.success) throw new Error('Lỗi tải dữ liệu select.');
+
+            const catSelect = form.addCategoryParent;
+            catSelect.innerHTML = '<option value="">-- Chọn danh mục cha --</option>';
+            catRes.data.forEach(c => catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+        }).catch(err => msg.textContent = err.message);
+    };
+
+    const closeModal = () => modal.style.display = 'none';
+
+    const submitHandler = (e) => {
+        e.preventDefault();
+        const payload = {
+            name: form.addCategoryName.value.trim(),
+            description: form.addCategoryDescription.value.trim(),
+            parent_id: form.addCategoryParent.value || null,
+        };
+        if (!payload.name) {
+            msg.textContent = 'Tên danh mục là bắt buộc.';
+            return;
+        }
+        msg.textContent = 'Đang tạo...';
+        fetch(`${API_BASE_URL}/categories`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json().then(data => {
+                if (!res.ok) throw new Error(data.error || 'Lỗi không xác định.');
+                return data;
+            }))
+            .then(data => {
+                msg.textContent = 'Tạo danh mục thành công!';
+                fetchCategories();
+                setTimeout(closeModal, 1000);
+            })
+            .catch(err => msg.textContent = err.message);
+    };
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    form.addEventListener('submit', submitHandler);
+}
 // ==================================================
 // ===== ĐIỂM KHỞI ĐỘNG CHÍNH (MAIN ENTRY POINT) =====
 // ==================================================
@@ -636,13 +731,62 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const categoryTable = document.getElementById('categoryTable');
+    if (categoryTable) {
+        // Sử dụng một addEventListener duy nhất cho toàn bộ bảng tài liệu
+        categoryTable.addEventListener('click', (e) => {
+            const target = e.target; // Lưu lại phần tử được click để dễ sử dụng
+
+            // --- XỬ LÝ NÚT SỬA ---
+            // Kiểm tra xem phần tử được click có phải là nút "Sửa" không
+            if (target.classList.contains('edit-category-btn')) {
+                const categoryId = target.dataset.id;
+                console.log(`Yêu cầu sửa danh mục ID: ${categoryId}`); // Thêm log để gỡ lỗi
+
+                // Gọi hàm mở modal sửa (hàm này phải được định nghĩa trong setupEditDocModal)
+                // Giả sử bạn đã có hàm openEditDocModal như đã hướng dẫn ở lần trước.
+                // openEditDocModal(docId);
+                return; // Dừng lại sau khi đã xử lý, tránh chạy các kiểm tra không cần thiết bên dưới
+            }
+
+            // --- XỬ LÝ NÚT XÓA ---
+            // Kiểm tra xem phần tử được click có phải là nút "Xóa" không
+            if (target.classList.contains('delete-category-btn')) {
+                const categoryId = target.dataset.id;
+                if (confirm(`Bạn chắc chắn muốn xóa danh mục ID ${categoryId}?`)) {
+                    fetch(`${API_BASE_URL}/categories/${categoryId}`, { method: 'DELETE' })
+                        .then(res => res.json().then(data => {
+                            // Luôn kiểm tra res.ok để bắt lỗi HTTP (4xx, 5xx)
+                            if (!res.ok) {
+                                // Ném lỗi với thông báo từ server để khối .catch() bắt được
+                                throw new Error(data.error || 'Lỗi không xác định từ server.');
+                            }
+                            return data;
+                        }))
+                        .then(() => { // Không cần dùng biến `data` ở đây
+                            alert('Xóa thành công!');
+                            // Tải lại bảng tài liệu ở trang hiện tại để giữ nguyên vị trí
+                            fetchCategories();
+                        })
+                        .catch(err => {
+                            // Hiển thị thông báo lỗi một cách thân thiện
+                            alert(`Lỗi khi xóa danh mục: ${err.message}`);
+                        });
+                }
+                return; // Dừng lại sau khi đã xử lý
+            }
+        });
+    }
+
     // --- Thiết lập các modal ---
     setupAddUserModal();
     setupEditUserModal();
     setupAddDocModal();
     setupEditDocModal();
+    // setupAddCategoryModal();
 
     // --- Tải dữ liệu ban đầu ---
     fetchUsers();
     fetchDocuments();
+    fetchCategories();
 });

@@ -1,25 +1,32 @@
 // =================================================================
 // ===== ĐIỂM KHỞI ĐỘNG CHÍNH (MAIN ENTRY POINT) ====================
 // =================================================================
+function getCurrentUserId() {
+  try {
+    const user = JSON.parse(localStorage.getItem('loggedInUser'));
+    return user && user.id ? user.id : null;
+  } catch {
+    return null;
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   // Định nghĩa URL gốc của API ở một nơi duy nhất để dễ dàng thay đổi
   const API_BASE_URL = 'http://127.0.0.1:3004/api';
 
-  
 
   // --- BƯỚC 1: KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP ---
   const loggedInUserString = localStorage.getItem('loggedInUser');
   if (!loggedInUserString) {
     alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
     // Giả sử trang login nằm ở thư mục gốc
-    window.location.href = '/login.html';
+    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
     return; // Dừng thực thi ngay lập tức
   }
 
   let loggedInUser;
   try {
-    loggedInUser = JSON.parse(loggedInUserString);
+    loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     // Kiểm tra cấu trúc tối thiểu của object user
     if (!loggedInUser || typeof loggedInUser.id === 'undefined' || !loggedInUser.username || !loggedInUser.role) {
       throw new Error('Dữ liệu người dùng trong localStorage không hợp lệ hoặc thiếu thông tin.');
@@ -28,9 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Lỗi khi parse dữ liệu người dùng:', error);
     localStorage.removeItem('loggedInUser'); // Xóa dữ liệu hỏng
     alert('Phiên đăng nhập đã hết hạn hoặc không hợp lệ, vui lòng đăng nhập lại.');
-    window.location.href = '/login.html';
+    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
     return;
   }
+
+
 
   // --- BƯỚC 2: NẾU ĐĂNG NHẬP HỢP LỆ, HIỂN THỊ THÔNG TIN VÀ KHỞI TẠO CÁC THÀNH PHẦN ---
 
@@ -38,7 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const userInfoSpan = document.getElementById('userId'); // Đảm bảo ID này đúng với HTML
   if (userInfoSpan) {
     userInfoSpan.textContent = `Xin chào, ${loggedInUser.username}`;
+
   }
+
+
 
   // Gọi tất cả các hàm thiết lập và truyền vào các đối số cần thiết
   setupUserDropdown(API_BASE_URL);
@@ -61,43 +73,29 @@ document.addEventListener('DOMContentLoaded', () => {
  * @returns {Promise<object>} - Promise sẽ resolve với dữ liệu từ API, hoặc reject với một Error chứa thông báo lỗi.
  */
 function apiFetch(url, options = {}) {
-  // --- BƯỚC 1: THÊM TÙY CHỌN QUAN TRỌNG NHẤT ---
-  // Yêu cầu trình duyệt luôn đính kèm cookie vào yêu cầu này.
-  // Đây là chìa khóa để giải quyết lỗi 401 Unauthorized.
   options.credentials = 'include';
 
-  // Đảm bảo headers luôn là một đối tượng để tránh lỗi khi gán thuộc tính.
   if (!options.headers) {
     options.headers = {};
   }
-  // Mặc định Content-Type là JSON nếu có body.
-  if (options.body) {
+
+  // CHỈ set Content-Type là JSON nếu body KHÔNG phải là FormData
+  if (options.body && !(options.body instanceof FormData)) {
     options.headers['Content-Type'] = 'application/json';
   }
 
-  // --- BƯỚC 2: GỌI FETCH VÀ XỬ LÝ RESPONSE ---
   return fetch(url, options)
     .then(response => {
-      // Nếu response không OK (ví dụ: 400, 401, 404, 500), chúng ta cần lấy lỗi từ body.
       if (!response.ok) {
-        // response.json() trả về một Promise, nên chúng ta cần return nó.
         return response.json().then(errorData => {
-          // Ném lỗi với thông báo từ server để khối .catch() bên ngoài bắt được.
-          // Nếu server không trả về { error: "..." }, dùng thông báo mặc định.
           throw new Error(errorData.error || `Lỗi HTTP ${response.status}`);
         }).catch(() => {
-          // Nếu body của lỗi không phải là JSON, ném lỗi chung.
           throw new Error(`Lỗi HTTP ${response.status}`);
         });
       }
-
-      // Nếu response OK, kiểm tra xem có nội dung không.
-      // Status 204 (No Content) thường được dùng cho các yêu cầu DELETE thành công.
       if (response.status === 204) {
-        return { success: true }; // Trả về một đối tượng thành công rỗng.
+        return { success: true };
       }
-
-      // Nếu có nội dung, parse nó dưới dạng JSON.
       return response.json();
     });
 }
@@ -130,7 +128,7 @@ function setupUserDropdown() {
     e.preventDefault();
     localStorage.removeItem('loggedInUser');
     // localStorage.removeItem('authToken'); // Xóa cả token nếu có
-    window.location.href = '/login.html';
+    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
   });
 }
 
@@ -147,7 +145,7 @@ function setupAdminButton(user) {
     adminBtn.addEventListener('click', (e) => {
       e.preventDefault();
       // Đảm bảo đường dẫn này chính xác
-      window.location.href = '/admin_page.html';
+      window.location.href = 'admin_page';
     });
   } else {
     adminBtn.style.display = 'none';
@@ -316,7 +314,7 @@ function setupPasswordModal(user, apiBaseUrl) {
     apiFetch(`${apiBaseUrl}/me/password`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', 
+      credentials: 'include',
       body: JSON.stringify({ currentPassword, newPassword })
     })
       .then(() => {
@@ -363,8 +361,9 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
   };
 
   const fetchMyDocs = () => {
-    docListBody.innerHTML = '<tr><td colspan="7" style="text-align:center">Đang tải...</td></tr>';
-    apiFetch(`${apiBaseUrl}/users/documents`) // API nhất quán
+    docListBody.innerHTML = '<tr><td colspan="9" style="text-align:center">Đang tải...</td></tr>';
+    const userid = getCurrentUserId(); // Lấy ID người dùng hiện tại
+    apiFetch(`${apiBaseUrl}/my-documents/${userid}`) // API nhất quán
       .then(response => {
         const docs = response.data;
         docListBody.innerHTML = '';
@@ -377,11 +376,13 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
           tr.innerHTML = `
                         <td>${doc.id}</td>
                         <td>${doc.title}</td>
+                        <td>${doc.description || 'N/A'}</td>
                         <td><a href="${doc.file_path}" target="_blank">${doc.file_name}</a></td>
+                        <td>${doc.file_name}</td>
+                        <td>${doc.file_type}</td>
                         <td>${(doc.file_size / 1024).toFixed(2)} KB</td>
                         <td>${doc.category_name || 'N/A'}</td>
-                        <td>${new Date(doc.created_at).toLocaleDateString('vi-VN')}</td>
-                        <td><button class="btn btn-danger delete-doc-btn" data-id="${doc.id}">Xoá</button></td>
+                        <td><button class="btn delete-btn delete-doc-btn" data-id="${doc.id}">Xoá</button></td>
                     `;
           docListBody.appendChild(tr);
         });
@@ -451,6 +452,7 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
       file_type: uploadForm.file_type.value,
       file_size: uploadForm.file_size.value,
       category_id: uploadForm.category_id.value,
+      created_by_id: getCurrentUserId()
     };
 
     if (!payload.title || !payload.file_path || !payload.category_id) {
@@ -465,7 +467,7 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
 
     apiFetch(`${apiBaseUrl}/documents`, { // API để tạo tài liệu mới
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
       .then(() => {

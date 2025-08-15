@@ -65,7 +65,7 @@
       <div class="section">
         <div class="section-header">
           <div class="section-title">Danh sách danh mục</div>
-          <button class="add-btn">+ Thêm danh mục mới</button>
+          <button class="btn add-category-btn">+ Thêm danh mục mới</button>
         </div>
         <input
           type="text"
@@ -201,8 +201,8 @@
         </form>
       </div>
     </div>
-    {% comment %} ========================================================== {%
-    endcomment %} {% comment %} Modal Add User {% endcomment %}
+    {% comment %} ========================================================== {%endcomment %} 
+    {% comment %} Modal Add User {% endcomment %}
     <div class="modal" id="addUserModal" style="display: none">
       <div class="modal-content modal-user-add">
         <span class="modal-close" id="closeAddUserModal">&times;</span>
@@ -309,6 +309,44 @@
           <button type="submit" class="btn-submit">Cập nhật thông tin</button>
 
           <div id="editUserMsg" class="form-message"></div>
+        </form>
+      </div>
+    </div>
+    {% comment %} ===================================== {% endcomment %}
+    {% comment %} Modal Add Category {% endcomment %}
+    <div class="modal" id="addCategoryModal" style="display: none">
+      <div class="modal-content modal-category-add">
+        <span class="modal-close" id="closeAddCategoryModal">&times;</span>
+        <h2 class="modal-title">Thêm danh mục mới</h2>
+
+        <form id="addCategoryForm" class="modal-form">
+          <div class="form-group">
+            <input
+              type="text"
+              id="addCategoryName"
+              name="name"
+              placeholder="Tên danh mục"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <textarea
+              type="textarea"
+              id="addCategoryDescription"
+              name="description"
+              placeholder="Mô tả danh mục"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <select id="addCategoryParent" name="parent" readonly>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-submit">Thêm danh mục mới</button>
+
+          <div id="addCategoryMsg" class="form-message"></div>
         </form>
       </div>
     </div>
