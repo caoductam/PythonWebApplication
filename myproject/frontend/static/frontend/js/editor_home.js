@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <td>${mimeToShort(doc.file_type)}</td>
               <td>${doc.file_size}</td>
               <td>${doc.category_name || ''}</td>
-              <td><button class="delete-btn" data-id="${doc.id}">Xoá</button></td>
+              <td><button class="btn delete-btn" data-id="${doc.id}">Xoá</button></td>
             `;
             tbody.appendChild(tr);
           });

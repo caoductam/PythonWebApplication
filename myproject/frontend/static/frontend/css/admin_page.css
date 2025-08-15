@@ -1,0 +1,414 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wdth,wght@0,75..100,100..900;1,75..100,100..900&display=swap');
+
+body {
+  background: #f5f7fa;
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+.summary-cards {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  padding: 30px 40px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
+.card-title {
+  font-size: 18px;
+  color: #3a5cff;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.card-count {
+  font-size: 36px;
+  color: #222;
+  font-weight: 700;
+}
+
+.section {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  padding: 32px 32px 24px 32px;
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #3a5cff;
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.search-input {
+  padding: 10px 16px;
+  border: 1.5px solid #dbeafe;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  font-size: 16px;
+  width: 320px;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.search-input:focus {
+  border: 1.5px solid #3a5cff;
+}
+
+.add-btn {
+  background: #3a5cff;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 17px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(58, 92, 255, 0.08);
+  transition: background 0.2s;
+}
+
+.add-btn:hover {
+  background: #1e40af;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 16px;
+}
+
+th,
+td {
+  padding: 14px 12px;
+  text-align: left;
+}
+
+th {
+  background: #e8f0fe;
+  color: #3a5cff;
+  font-weight: 700;
+}
+
+tr {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+tr:last-child {
+  border-bottom: none;
+}
+
+.status-active {
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.action-btn,
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-right: 6px;
+  transition: background 0.2s;
+}
+
+.action-edit,
+.edit-btn,
+.edit-doc-btn,
+.add-doc-btn,
+.add-user-btn,
+.edit-user-btn {
+  /* background: #e0e7ff;
+  color: #3a5cff; */
+  background-color: #3a5cff;
+  color: #fff;
+  height: 40px;
+}
+
+.action-edit:hover,
+.edit-btn:hover,
+.edit-doc-btn:hover,
+.add-doc-btn:hover,
+.add-user-btn:hover,
+.edit-user-btn:hover {
+  background: #102fc9;
+}
+
+.action-delete,
+.delete-btn,
+.delete-doc-btn,
+.delete-user-btn {
+  background: rgb(246, 39, 39);
+  color: #fff;
+  margin-top: 2px;
+  height: 40px;
+}
+
+.action-delete:hover,
+.delete-btn:hover,
+.delete-doc-btn:hover {
+  background: rgb(184, 32, 32);
+}
+
+.delete-btn,
+.edit-btn {
+  display: inline-block;
+  margin-top: 10px;
+  text-decoration: none;
+}
+
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Roboto', sans-serif;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #777;
+}
+
+.modal-title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #2b45d8;
+}
+
+.modal-form input,
+.modal-form textarea,
+.modal-form select {
+  width: 94%;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 15px;
+  background-color: #f9fafb;
+  transition: border 0.3s;
+}
+
+.modal-form input:focus,
+.modal-form textarea:focus,
+.modal-form select:focus {
+  border-color: #3b82f6;
+  outline: none;
+  background-color: #fff;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: linear-gradient(90deg, #4F7EF3, #3A61DB);
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-submit:hover {
+  background: linear-gradient(90deg, #3A61DB, #2c4dcf);
+}
+
+.form-message {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #e03a3a;
+  min-height: 22px;
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .summary-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 800px) {
+  .section {
+    padding: 16px 4px 12px 4px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .search-input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  table {
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    padding: 8px 6px;
+  }
+}
+
+/* Scroll for document table */
+.scroll-x {
+  overflow-x: auto;
+}
+
+.scroll-y {
+  overflow-y: auto;
+  max-height: 500px;
+  /* Giới hạn chiều cao của bảng */
+}
+
+#documentTable {
+  min-width: 1200px;
+  /* Đảm bảo luôn có scroll ngang nếu bảng dài */
+}
+
+/* Thêm vào cuối file frontend/css/admin_page.css */
+
+.back-button {
+  position: absolute;
+  /* Hoặc fixed nếu bạn muốn nó luôn hiển thị khi cuộn */
+  top: 15px;
+  left: 15px;
+  padding: 8px 15px;
+  background: #3a5cff;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 5px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  z-index: 1000;
+  /* Đảm bảo nút luôn nằm trên các phần tử khác */
+  border: none;
+  /* Bỏ viền */
+  cursor: pointer;
+  /* Thêm con trỏ tay khi hover */
+}
+
+.back-button:hover {
+  transform: translateY(-1px);
+  /* Hiệu ứng nhấc lên một chút */
+}
+
+.back-button:active {
+  background-color: #3a5cff;
+  transform: translateY(0);
+}
+
+/* Tìm và sửa lại class này trong file admin_page.css */
+
+.form-group-checkbox {
+  /* Sử dụng Flexbox để sắp xếp các phần tử con */
+  display: flex;
+
+  /* Căn chỉnh các phần tử con theo chiều dọc (giữa) */
+  align-items: center;
+
+  /* Đảo ngược thứ tự hiển thị của các phần tử con */
+  flex-direction: row-reverse;
+  /* Đưa label lên trước checkbox */
+
+  /* Đẩy nhóm này sang bên trái của form */
+  justify-content: flex-end;
+
+  margin-top: 10px;
+  margin-bottom: 25px;
+  cursor: pointer;
+  /* Biến toàn bộ khu vực thành con trỏ để dễ click */
+}
+
+/* Điều chỉnh khoảng cách giữa label và checkbox */
+.form-group-checkbox label {
+  font-size: 16px;
+  color: #555;
+  padding-right: 10px;
+  /* Tạo khoảng cách với checkbox bên phải */
+}
+
+/* Tùy chỉnh lại kích thước checkbox nếu cần */
+.form-group-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  /* Bỏ margin mặc định */
+}

@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <title>TechCorp - Admin Page - Admin</title>
+    <link rel="stylesheet" href="{% static 'frontend/css/admin_page.css' %}" />
+  </head>
+  <body>
+    <button id="backButton" class="back-button">
+      &larr; Trở về trang cá nhân
+    </button>
+    <div class="container">
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="card">
+          <div class="card-title">Danh mục</div>
+          <div class="card-count" id="categoryCount">0</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Tài liệu</div>
+          <div class="card-count" id="documentCount">0</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Người dùng</div>
+          <div class="card-count" id="userCount">0</div>
+        </div>
+      </div>
+
+      <!-- User List -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Danh sách người dùng</div>
+          <button class="btn add-user-btn" id="openAddUserModalBtn">
+            + Thêm người dùng mới
+          </button>
+        </div>
+        <input
+          type="text"
+          class="search-input"
+          id="userSearch"
+          placeholder="Tìm kiếm người dùng..."
+        />
+        <div class="scroll-x scroll-y">
+          <table id="userTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên người dùng</th>
+                <th>Mật khẩu</th>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JS render -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Category List -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Danh sách danh mục</div>
+          <button class="add-btn">+ Thêm danh mục mới</button>
+        </div>
+        <input
+          type="text"
+          class="search-input"
+          id="categorySearch"
+          placeholder="Tìm kiếm danh mục..."
+        />
+        <div class="scroll-x">
+          <table id="categoryTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên danh mục</th>
+                <th>Mô tả danh mục</th>
+                <th>Parent ID</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JS render -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Document List -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Danh sách tài liệu</div>
+          <button class="btn add-doc-btn" id="add-doc-btn">
+            + Thêm tài liệu mới
+          </button>
+        </div>
+        <input
+          type="text"
+          class="search-input"
+          id="documentSearch"
+          placeholder="Tìm kiếm tài liệu..."
+        />
+        <div class="scroll-x scroll-y">
+          <table id="documentTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tiêu đề</th>
+                <th>Mô tả</th>
+                <th>Đường dẫn tài liệu</th>
+                <th>Tên tài liệu</th>
+                <th>Loại tài liệu</th>
+                <th>Kích thước</th>
+                <th>Danh mục</th>
+                <th>Người tạo</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- JS render -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {% comment %} Modal Add Document {% endcomment %}
+    <div class="modal" id="addDocModal" style="display: none">
+      <div class="modal-content modal-doc-add">
+        <span class="modal-close" id="closeAddDocModal">&times;</span>
+        <h2 class="modal-title">Thêm tài liệu mới</h2>
+        <form id="addDocForm" class="modal-form">
+          <input type="text" id="addDocTitle" placeholder="Tiêu đề" required />
+
+          <textarea id="addDocDescription" placeholder="Mô tả" rows="2"></textarea>
+
+          <input type="file" id="addDocFile" />
+
+          <input type="text" id="addDocPath" placeholder="Đường dẫn file" readonly />
+
+          <input type="text" id="addDocFileName" placeholder="Tên file" readonly />
+
+          <input type="text" id="addDocType" placeholder="Loại file" readonly />
+
+          <input type="text" id="addDocSize" placeholder="Kích thước" readonly />
+
+          <!-- Danh mục: để trống, sẽ render động -->
+          <select id="addDocCategory" required>
+            <!-- Inject options here with JS -->
+          </select>
+
+          <!-- Editor: để trống, sẽ render bằng JS -->
+          <select id="addDocEditor" required>
+            <!-- Inject options here with JS -->
+          </select>
+
+          <button type="submit" class="btn-submit">Cập nhật</button>
+
+          <div id="addDocMsg" class="form-message"></div>
+        </form>
+      </div>
+    </div>
+    {% comment %} ===================================== {% endcomment %} 
+    {% comment %} Modal Edit Document {% endcomment %}
+    <div class="modal" id="editDocModal" style="display: none">
+      <div class="modal-content modal-doc-update">
+        <span class="modal-close" id="closeEditDocModal">&times;</span>
+        <h2 class="modal-title">Cập nhật tài liệu</h2>
+        <form id="editDocForm" class="modal-form">
+          <input type="text" id="editDocTitle" placeholder="Tiêu đề" required />
+
+          <textarea id="editDocDescription" placeholder="Mô tả" rows="2"></textarea>
+
+          <input type="file" id="editDocFile" />
+
+          <input type="text" id="editDocPath" placeholder="Đường dẫn file" readonly />
+
+          <input type="text" id="editDocFileName" placeholder="Tên file" readonly />
+
+          <input type="text" id="editDocType" placeholder="Loại file" readonly />
+
+          <input type="text" id="editDocSize" placeholder="Kích thước" readonly />
+
+          <!-- Danh mục: để trống, sẽ render động -->
+          <select id="editDocCategory" required>
+            <!-- Inject options here with JS -->
+          </select>
+
+          <!-- Editor: để trống, sẽ render bằng JS -->
+          <select id="editDocEditor" required>
+            <!-- Inject options here with JS -->
+          </select>
+          <div id="editDocMsg" class="form-message"></div>
+
+          <button type="submit" class="btn-submit">Cập nhật</button>
+        </form>
+      </div>
+    </div>
+    {% comment %} ========================================================== {%
+    endcomment %} {% comment %} Modal Add User {% endcomment %}
+    <div class="modal" id="addUserModal" style="display: none">
+      <div class="modal-content modal-user-add">
+        <span class="modal-close" id="closeAddUserModal">&times;</span>
+        <h2 class="modal-title">Thêm người dùng mới</h2>
+
+        <form id="addUserForm" class="modal-form">
+          <div class="form-group">
+            <input
+              type="text"
+              id="addUsername"
+              name="username"
+              placeholder="Tên người dùng"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <input
+              type="password"
+              id="addPassword"
+              name="password"
+              placeholder="Mật khẩu"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <input
+              type="text"
+              id="addFullName"
+              name="full_name"
+              placeholder="Họ tên"
+            />
+          </div>
+
+          <div class="form-group">
+            <input
+              type="email"
+              id="addEmail"
+              name="email"
+              placeholder="Email"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <select id="addRole" name="role" required>
+              <option value="" disabled selected>— Chọn vai trò —</option>
+              <option value="Admin">Admin</option>
+              <option value="Editor">Editor</option>
+              <option value="Viewer">Viewer</option>
+            </select>
+          </div>
+
+          <div class="form-group form-group-checkbox">
+            <input type="checkbox" id="addStatus" name="status" checked />
+            <label for="addStatus">Hoạt động</label>
+          </div>
+
+          <button type="submit" class="btn-submit">Thêm người dùng mới</button>
+
+          <div id="addUserMsg" class="form-message"></div>
+        </form>
+      </div>
+    </div>
+    {% comment %} ===================================== {% endcomment %}
+    {% comment %} Modal Edit User {% endcomment %}
+    <div class="modal" id="editUserModal" style="display: none">
+      <div class="modal-content modal-user-edit">
+        <span class="modal-close" id="closeEditUserModal">&times;</span>
+        <h2 class="modal-title">Chỉnh sửa thông tin người dùng</h2>
+
+        <form id="editUserForm" class="modal-form">
+          <div class="form-group">
+            <input type="text" id="editUsername" placeholder="Tên người dùng" required/>
+          </div>
+
+          <div class="form-group">
+            <input type="password" id="editPassword" placeholder="Để trống nếu không muốn đổi mật khẩu" required/>
+          </div>
+
+          <div class="form-group">
+            <input type="text" id="editFullName" placeholder="Họ tên"/>
+          </div>
+
+          <div class="form-group">
+            <input type="email" id="editEmail" placeholder="Email" required/>
+          </div>
+
+          <div class="form-group">
+            <select id="editRole" required>
+              <option value="" disabled selected>— Chọn vai trò —</option>
+              <option value="Admin">Admin</option>
+              <option value="Editor">Editor</option>
+              <option value="Viewer">Viewer</option>
+            </select>
+          </div>
+
+          <div class="form-group form-group-checkbox">
+            <input type="checkbox" id="editStatus" checked />
+            <label for="editStatus">Hoạt động</label>
+          </div>
+
+          <button type="submit" class="btn-submit">Cập nhật thông tin</button>
+
+          <div id="editUserMsg" class="form-message"></div>
+        </form>
+      </div>
+    </div>
+    {% comment %} ===================================== {% endcomment %}
+
+    <script src="{% static 'frontend/js/admin_page.js' %}"></script>
+  </body>
+</html>

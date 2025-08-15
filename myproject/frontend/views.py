@@ -15,3 +15,6 @@ def editor_home(request):
 
 def admin_home(request):
     return render(request, 'frontend/admin_home.html')
+
+def admin_page(request):
+    return render(request, 'frontend/admin_page.html')

@@ -132,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (res.success) {
             alert('Cập nhật thành công!');
             window.location.href = '/document';
+           
           } else {
             alert('Lỗi: ' + (res.error || 'Không xác định'));
           }

@@ -52,7 +52,8 @@ body {
     border-collapse: collapse;
     background: #fff;
     border-radius: 10px;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: 400px;
 }
 
 .user-table th, .user-table td {

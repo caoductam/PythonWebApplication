@@ -200,7 +200,6 @@ app.delete('/api/documents/:id', (req, res) => {
   });
 });
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`✅ API Server đang chạy tại http://127.0.0.1:${PORT}` );
 });

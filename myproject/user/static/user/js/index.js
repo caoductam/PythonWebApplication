@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
           e.preventDefault();
           if (confirm('Bạn chắc chắn muốn xoá?')) {
             const userId = this.getAttribute('data-id');
-            fetch(`http://127.0.0.1:3000/api/user/${userId}/delete`, {
+            fetch(`http://127.0.0.1:3000/api/users/${userId}`, {
               method: 'DELETE'
             })
               .then(res => res.json())

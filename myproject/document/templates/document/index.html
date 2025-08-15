@@ -1,82 +1,95 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>Danh sách tài liệu</title>
-    <link rel="stylesheet" href="{% static 'document/css/index.css' %}">
-</head>
+    <link rel="stylesheet" href="{% static 'document/css/index.css' %}" />
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <div class="header">
-            <h2>Danh sách tài liệu</h2>
-            <a href="{% url 'document:add_document' %}" class="btn add-btn">+ Thêm tài liệu mới</a>
-        </div>
-        <div style="margin-bottom: 18px;">
-            <input type="text" id="search-input" class="search-input" placeholder="Tìm kiếm tài liệu...">
-        </div>
-        <div class="table-responsive">
-            <table class="document-table" id="document-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tiêu đề</th>
-                        <th>Mô tả</th>
-                        <th>Đường dẫn tài liệu</th>
-                        <th>Tên tài liệu</th>
-                        <th>Loại tài liệu</th>
-                        <th>Kích thước</th>
-                        <th>Danh mục</th>
-                        <th>Người tạo</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for document in documents %}
-                    <tr>
-                        <td>{{ document.id }}</td>
-                        <td>{{ document.title }}</td>
-                        <td>{{ document.description }}</td>
-                        <td>
-                            <a href="{{ document.file_path }}" target="_blank">{{ document.file_name }}</a>
-                        </td>
-                        <td>{{ document.file_name }}</td>
-                        <td>{{ document.file_type }}</td>
-                        <td>{{ document.file_size }}</td>
-                        <td>
-                            {% if document.category_id %}
-                            {{ document.category_id.name }}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if document.created_by %}
-                            {{ document.created_by.username }}
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="{% url 'document:update_document' document.id %}" class="btn edit-btn">Sửa</a>
-                            <form action="{% url 'document:delete_document' document.id %}" method="post"
-                                style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn delete-btn"
-                                    onclick="return confirm('Bạn chắc chắn muốn xoá?')">Xoá</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+      <div class="header">
+        <h2>Danh sách tài liệu</h2>
+        <a href="{% url 'document:add_document' %}" class="btn add-btn"
+          >+ Thêm tài liệu mới</a
+        >
+      </div>
+      <div style="margin-bottom: 18px">
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="Tìm kiếm tài liệu..."
+        />
+      </div>
+      <div class="table-responsive">
+        <table class="document-table" id="document-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tiêu đề</th>
+              <th>Mô tả</th>
+              <th>Đường dẫn tài liệu</th>
+              <th>Tên tài liệu</th>
+              <th>Loại tài liệu</th>
+              <th>Kích thước</th>
+              <th>Danh mục</th>
+              <th>Người tạo</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for document in documents %}
+            <tr>
+              <td>{{ document.id }}</td>
+              <td>{{ document.title }}</td>
+              <td>{{ document.description }}</td>
+              <td>
+                <a href="{{ document.file_path }}" target="_blank"
+                  >{{ document.file_name }}</a
+                >
+              </td>
+              <td>{{ document.file_name }}</td>
+              <td>{{ document.file_type }}</td>
+              <td>{{ document.file_size }}</td>
+              <td>
+                {% if document.category_id %} {{ document.category_id.name }} {%
+                else %} - {% endif %}
+              </td>
+              <td>
+                {% if document.created_by %} {{ document.created_by.username }}
+                {% else %} - {% endif %}
+              </td>
+              <td>
+                <a
+                  href="{% url 'document:update_document' document.id %}"
+                  class="btn edit-btn"
+                  >Sửa</a
+                >
+                <form
+                  action="{% url 'document:delete_document' document.id %}"
+                  method="post"
+                  style="display: inline"
+                >
+                  {% csrf_token %}
+                  <button
+                    type="submit"
+                    class="btn delete-btn"
+                    onclick="return confirm('Bạn chắc chắn muốn xoá?')"
+                  >
+                    Xoá
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-        <div id="pagination" style="margin-top:16px;"></div>
+      <div id="pagination" style="margin-top: 16px"></div>
     </div>
     <script src="{% static 'document/js/index.js' %}"></script>
-</body>
-
+  </body>
 </html>

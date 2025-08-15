@@ -12,4 +12,5 @@ urlpatterns = [
     path('viewer_home/', views.viewer_home, name='viewer_home'),
     path('editor_home/', views.editor_home, name='editor_home'),
     path('admin_home/', views.admin_home, name='admin_home'),
+    path('admin_home/admin_page', views.admin_page, name='admin_page'),
 ]
