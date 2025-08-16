@@ -1,49 +1,28 @@
-// admin_home.js hoặc file JS tương ứng của bạn
-
 document.addEventListener('DOMContentLoaded', () => {
 
-    // =================================================================
-    // ===== ĐỊNH NGHĨA CÁC BIẾN TRẠNG THÁI VÀ HẰNG SỐ =================
-    // =================================================================
-    const API_BASE_URL = 'http://127.0.0.1:3004/api'; // <-- QUAN TRỌNG: Dùng một nơi duy nhất
+    const API_BASE_URL = 'http://127.0.0.1:3004/api';
 
     let currentPage = 1;
     const pageSize = 12;
     let currentSearch = '';
     let currentCategory = '';
     let currentFileType = '';
-    let currentView = 'grid'; // Mặc định là 'grid'
+    let currentView = 'grid';
 
-    // =================================================================
-    // ===== HÀM TRỢ GIÚP (HELPERS ) =====================================
-    // =================================================================
-
-    /**
-     * Hàm trợ giúp để xử lý fetch và parse JSON, bao gồm cả xử lý lỗi.
-     * @param {string} url - URL của API.
-     * @returns {Promise<object>} - Promise chứa dữ liệu đã được parse.
-     */
     function apiFetch(url) {
         return fetch(url)
             .then(response => {
                 if (!response.ok) {
-                    // Nếu server trả về lỗi (4xx, 5xx), ném lỗi để khối .catch() bắt được
                     throw new Error(`Lỗi HTTP ${response.status}: ${response.statusText}`);
                 }
                 return response.json();
             })
             .catch(error => {
                 console.error(`Lỗi khi fetch từ ${url}:`, error);
-                // Ném lại lỗi để các hàm gọi nó có thể hiển thị thông báo cho người dùng
                 throw error;
             });
     }
 
-    /**
-     * Hàm định dạng kích thước file từ byte sang đơn vị dễ đọc hơn.
-     * @param {number} bytes - Kích thước file tính bằng byte.
-     * @returns {string} - Chuỗi đã được định dạng (ví dụ: "1.23 MB").
-     */
     function formatBytes(bytes) {
         if (bytes === 0 || !bytes) return '0 Bytes';
         const k = 1024;
@@ -52,16 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-
-    // =================================================================
-    // ===== CÁC HÀM TẢI DỮ LIỆU (DATA FETCHING FUNCTIONS) ==============
-    // =================================================================
-
-    // --- Tải các số liệu thống kê tổng quan ---
     function loadStats() {
         apiFetch(`${API_BASE_URL}/stats`)
             .then(stats => {
-                // Giả sử API trả về { document_count: N, category_count: M, user_count: P }
                 document.querySelector('.stat-number.documents').textContent = stats.document_count || 0;
                 document.querySelector('.stat-number.categories').textContent = stats.category_count || 0;
                 document.querySelector('.stat-number.users').textContent = stats.user_count || 0;
@@ -71,11 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // --- Tải danh sách danh mục cho ô select filter ---
     function loadFilterCategories() {
         apiFetch(`${API_BASE_URL}/categories`)
             .then(response => {
-                // Giả sử API trả về { success: true, data: [...] }
                 if (!response.success || !Array.isArray(response.data)) {
                     throw new Error("Dữ liệu danh mục không hợp lệ.");
                 }
@@ -90,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // --- Tải các loại file cho ô select filter ---
     function loadFileTypes() {
         apiFetch(`${API_BASE_URL}/filetypes`)
             .then(response => {
@@ -99,11 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const select = document.getElementById('format-select');
                 select.innerHTML = '<option value="">Tất cả định dạng</option>';
-
-                // --- SỬA LỖI TẠI ĐÂY ---
-                // Truy cập vào thuộc tính .file_type của mỗi đối tượng typeObj
                 response.data.forEach(typeObj => {
-                    // Bỏ qua các giá trị null hoặc rỗng từ CSDL (nếu có)
                     if (typeObj && typeObj.file_type) {
                         select.innerHTML += `<option value="${typeObj.file_type}">${typeObj.file_type}</option>`;
                     }
@@ -114,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-    // --- Tải và hiển thị danh sách tài liệu (hàm chính) ---
     function fetchAndRenderDocuments(page = 1) {
         currentPage = page;
         const params = new URLSearchParams({
@@ -130,19 +94,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         apiFetch(`${API_BASE_URL}/documents?${params.toString()}`)
             .then(data => {
-                // Giả sử API trả về { results: [...], total: N, page: P, total_pages: T }
-                if (!data || !Array.isArray(data.results)) {
+                // SỬA ĐOẠN NÀY CHO PHÙ HỢP VỚI API TRẢ VỀ
+                if (!data || !data.success || !data.data || !Array.isArray(data.data.results)) {
                     throw new Error("Dữ liệu tài liệu trả về không hợp lệ.");
                 }
+                const results = data.data.results;
+                const total = data.data.total;
+                const page = data.data.page;
+                const total_pages = data.data.total_pages;
+
                 document.getElementById('doc-count').textContent =
-                    `Hiển thị ${data.results.length} trong số ${data.total.toLocaleString()} tài liệu`;
+                    `Hiển thị ${results.length} trong số ${total.toLocaleString()} tài liệu`;
 
                 docList.className = 'doc-list ' + (currentView === 'list' ? 'list-view' : 'grid-view');
 
-                if (data.results.length === 0) {
+                if (results.length === 0) {
                     docList.innerHTML = '<p>Không tìm thấy tài liệu nào phù hợp.</p>';
                 } else {
-                    docList.innerHTML = data.results.map(doc => `
+                    docList.innerHTML = results.map(doc => `
                         <div class="doc-item">
                             <a class="doc-title" href="${doc.file_path}" target="_blank">${doc.title}</a>
                             <div class="doc-meta">
@@ -155,14 +124,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `).join('');
                 }
-                renderPagination(data.page, data.total_pages);
+                renderPagination(page, total_pages);
             })
             .catch(error => {
                 docList.innerHTML = `<p style="color: red;">Lỗi tải tài liệu: ${error.message}</p>`;
             });
     }
 
-    // --- Tải và hiển thị các danh mục dạng lưới ---
     function loadCategoryGrid() {
         const grid = document.getElementById('category-grid');
         apiFetch(`${API_BASE_URL}/categories_grid`)
@@ -183,12 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
-
-    // =================================================================
-    // ===== CÁC HÀM RENDER GIAO DIỆN (UI FUNCTIONS) ===================
-    // =================================================================
-
-    // --- Hàm render các nút phân trang ---
     function renderPagination(current, total) {
         const pagDiv = document.getElementById('doc-pagination');
         if (!total || total <= 1) {
@@ -201,11 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="page-btn" data-page="${current + 1}" ${current === total ? 'disabled' : ''}>&gt;</button>
         `;
     }
-
-
-    // =================================================================
-    // ===== GÁN CÁC SỰ KIỆN (EVENT LISTENERS) =========================
-    // =================================================================
 
     function setupEventListeners() {
         document.getElementById('search-input').addEventListener('input', (e) => {
@@ -250,11 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
-
-    // =================================================================
-    // ===== ĐIỂM KHỞI ĐỘNG CHÍNH (MAIN ENTRY POINT) ====================
-    // =================================================================
 
     function initializePage() {
         setupEventListeners();

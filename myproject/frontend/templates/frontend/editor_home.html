@@ -348,7 +348,7 @@
           <input type="text" id="profileFullname" name="fullname" />
 
           <div style="margin: 12px 0 0 0">
-            <button type="submit" class="profile-save-btn">Lưu thay đổi</button>
+            <button type="submit" class="profile-save-btn" id="profile-save-btn">Lưu thay đổi</button>
           </div>
           <div
             id="profileMsg"
@@ -390,7 +390,7 @@
         <div class="manage-doc-content">
           <!-- Danh sách tài liệu -->
           <div class="tab-pane active" id="docListPane">
-            <table class="doc-table">
+            <table class="doc-table" id="documentTable">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -483,32 +483,55 @@
       </div>
     </div>
 
-    <div class="modal" id="editDocModal">
+<div class="modal" id="editDocModal">
       <div class="modal-content modal-doc-update">
         <span class="modal-close" id="closeEditDocModal">&times;</span>
         <h2>Sửa tài liệu</h2>
-        <form id="editDocForm">
-          <label>Tiêu đề</label>
-          <input type="text" id="editDocTitle" required />
-          <label>Mô tả</label>
-          <input type="text" id="editDocDescription" />
-          <label>Danh mục</label>
-          <select id="editDocCategory" required></select>
-          <label>Loại file</label>
-          <input type="text" id="editDocType" required />
-          <label>Tên file</label>
-          <input type="text" id="editDocFileName" required />
-          <label>Kích thước</label>
-          <input type="number" id="editDocSize" required />
-          <label>Đường dẫn file</label>
-          <input type="text" id="editDocPath" required />
-          <div style="margin: 12px 0 0 0">
-            <button type="submit" class="profile-save-btn">Lưu thay đổi</button>
-          </div>
-          <div
-            id="editDocMsg"
-            style="margin-top: 10px; color: #e03a3a; min-height: 22px"
-          ></div>
+                <form id="editDocForm" class="modal-form">
+          <input type="text" id="editDocTitle" placeholder="Tiêu đề" required />
+
+          <textarea
+            id="editDocDescription"
+            placeholder="Mô tả"
+            rows="2"
+          ></textarea>
+
+          <input type="file" id="editDocFile" />
+
+          <input
+            type="text"
+            id="editDocPath"
+            placeholder="Đường dẫn file"
+            readonly
+          />
+
+          <input
+            type="text"
+            id="editDocFileName"
+            placeholder="Tên file"
+            readonly
+          />
+
+          <input
+            type="text"
+            id="editDocType"
+            placeholder="Loại file"
+            readonly
+          />
+
+          <input
+            type="text"
+            id="editDocSize"
+            placeholder="Kích thước"
+            readonly
+          />
+
+          <!-- Danh mục: để trống, sẽ render động -->
+          <select id="editDocCategory" required>
+            <!-- Inject options here with JS -->
+          </select>
+          <div id="editDocMsg" class="form-message"></div>
+          <button type="submit" class="btn-submit">Cập nhật</button>
         </form>
       </div>
     </div>

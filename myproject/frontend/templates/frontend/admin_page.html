@@ -65,7 +65,9 @@
       <div class="section">
         <div class="section-header">
           <div class="section-title">Danh sách danh mục</div>
-          <button class="btn add-category-btn">+ Thêm danh mục mới</button>
+          <button class="btn add-cat-btn" id="openAddCategoryModalBtn">
+            + Thêm danh mục mới
+          </button>
         </div>
         <input
           type="text"
@@ -126,6 +128,7 @@
             </tbody>
           </table>
         </div>
+        <div id="pagination" class="pagination"></div>
       </div>
     </div>
 
@@ -137,17 +140,36 @@
         <form id="addDocForm" class="modal-form">
           <input type="text" id="addDocTitle" placeholder="Tiêu đề" required />
 
-          <textarea id="addDocDescription" placeholder="Mô tả" rows="2"></textarea>
+          <textarea
+            id="addDocDescription"
+            placeholder="Mô tả"
+            rows="2"
+          ></textarea>
 
           <input type="file" id="addDocFile" />
 
-          <input type="text" id="addDocPath" placeholder="Đường dẫn file" readonly />
+          <input
+            type="text"
+            id="addDocPath"
+            placeholder="Đường dẫn file"
+            readonly
+          />
 
-          <input type="text" id="addDocFileName" placeholder="Tên file" readonly />
+          <input
+            type="text"
+            id="addDocFileName"
+            placeholder="Tên file"
+            readonly
+          />
 
           <input type="text" id="addDocType" placeholder="Loại file" readonly />
 
-          <input type="text" id="addDocSize" placeholder="Kích thước" readonly />
+          <input
+            type="text"
+            id="addDocSize"
+            placeholder="Kích thước"
+            readonly
+          />
 
           <!-- Danh mục: để trống, sẽ render động -->
           <select id="addDocCategory" required>
@@ -159,7 +181,7 @@
             <!-- Inject options here with JS -->
           </select>
 
-          <button type="submit" class="btn-submit">Cập nhật</button>
+          <button type="submit" class="btn-submit">Thêm tài liệu mới</button>
 
           <div id="addDocMsg" class="form-message"></div>
         </form>
@@ -174,17 +196,41 @@
         <form id="editDocForm" class="modal-form">
           <input type="text" id="editDocTitle" placeholder="Tiêu đề" required />
 
-          <textarea id="editDocDescription" placeholder="Mô tả" rows="2"></textarea>
+          <textarea
+            id="editDocDescription"
+            placeholder="Mô tả"
+            rows="2"
+          ></textarea>
 
           <input type="file" id="editDocFile" />
 
-          <input type="text" id="editDocPath" placeholder="Đường dẫn file" readonly />
+          <input
+            type="text"
+            id="editDocPath"
+            placeholder="Đường dẫn file"
+            readonly
+          />
 
-          <input type="text" id="editDocFileName" placeholder="Tên file" readonly />
+          <input
+            type="text"
+            id="editDocFileName"
+            placeholder="Tên file"
+            readonly
+          />
 
-          <input type="text" id="editDocType" placeholder="Loại file" readonly />
+          <input
+            type="text"
+            id="editDocType"
+            placeholder="Loại file"
+            readonly
+          />
 
-          <input type="text" id="editDocSize" placeholder="Kích thước" readonly />
+          <input
+            type="text"
+            id="editDocSize"
+            placeholder="Kích thước"
+            readonly
+          />
 
           <!-- Danh mục: để trống, sẽ render động -->
           <select id="editDocCategory" required>
@@ -201,8 +247,8 @@
         </form>
       </div>
     </div>
-    {% comment %} ========================================================== {%endcomment %} 
-    {% comment %} Modal Add User {% endcomment %}
+    {% comment %} ==========================================================
+    {%endcomment %} {% comment %} Modal Add User {% endcomment %}
     <div class="modal" id="addUserModal" style="display: none">
       <div class="modal-content modal-user-add">
         <span class="modal-close" id="closeAddUserModal">&times;</span>
@@ -268,7 +314,7 @@
         </form>
       </div>
     </div>
-    {% comment %} ===================================== {% endcomment %}
+    {% comment %} ===================================== {% endcomment %} 
     {% comment %} Modal Edit User {% endcomment %}
     <div class="modal" id="editUserModal" style="display: none">
       <div class="modal-content modal-user-edit">
@@ -277,19 +323,29 @@
 
         <form id="editUserForm" class="modal-form">
           <div class="form-group">
-            <input type="text" id="editUsername" placeholder="Tên người dùng" required/>
+            <input
+              type="text"
+              id="editUsername"
+              placeholder="Tên người dùng"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <input type="password" id="editPassword" placeholder="Để trống nếu không muốn đổi mật khẩu" required/>
+            <input
+              type="password"
+              id="editPassword"
+              placeholder="Để trống nếu không muốn đổi mật khẩu"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <input type="text" id="editFullName" placeholder="Họ tên"/>
+            <input type="text" id="editFullName" placeholder="Họ tên" />
           </div>
 
           <div class="form-group">
-            <input type="email" id="editEmail" placeholder="Email" required/>
+            <input type="email" id="editEmail" placeholder="Email" required />
           </div>
 
           <div class="form-group">
@@ -312,7 +368,7 @@
         </form>
       </div>
     </div>
-    {% comment %} ===================================== {% endcomment %}
+    {% comment %} ===================================== {% endcomment %} 
     {% comment %} Modal Add Category {% endcomment %}
     <div class="modal" id="addCategoryModal" style="display: none">
       <div class="modal-content modal-category-add">
@@ -324,32 +380,67 @@
             <input
               type="text"
               id="addCategoryName"
-              name="name"
               placeholder="Tên danh mục"
               required
             />
           </div>
-
           <div class="form-group">
             <textarea
-              type="textarea"
               id="addCategoryDescription"
-              name="description"
               placeholder="Mô tả danh mục"
-              required
-            />
+              rows="2"
+            ></textarea>
           </div>
           <div class="form-group">
-            <select id="addCategoryParent" name="parent" readonly>
-            </select>
+            <select
+              id="addCategoryParent"
+              name="addCategoryParent"
+              readonly
+            ></select>
           </div>
-
           <button type="submit" class="btn-submit">Thêm danh mục mới</button>
-
           <div id="addCategoryMsg" class="form-message"></div>
         </form>
       </div>
     </div>
+    {% comment %} ===================================== {% endcomment %} 
+    {% comment %} Modal Edit Category {% endcomment %}
+    <div class="modal" id="editCategoryModal" style="display: none">
+      <div class="modal-content modal-category-edit">
+        <span class="modal-close" id="closeEditCategoryModal">&times;</span>
+        <h2 class="modal-title">Chỉnh sửa thông tin danh mục</h2>
+
+        <form id="editCategoryForm" class="modal-form">
+          <div class="form-group">
+            <input
+              type="text"
+              id="editCategoryName"
+              placeholder="Tên danh mục"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <textarea
+              id="editCategoryDescription"
+              placeholder="Mô tả danh mục"
+              rows="2"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <select
+              id="editCategoryParent"
+              name="editCategoryParent"
+              readonly
+            ></select>
+          </div>
+
+          <button type="submit" class="btn-submit">Cập nhật thông tin</button>
+
+          <div id="editCategoryMsg" class="form-message"></div>
+        </form>
+      </div>
+    </div>
+
     {% comment %} ===================================== {% endcomment %}
 
     <script src="{% static 'frontend/js/admin_page.js' %}"></script>

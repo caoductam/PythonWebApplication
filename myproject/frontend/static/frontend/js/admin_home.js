@@ -10,55 +10,25 @@ function getCurrentUserId() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Định nghĩa URL gốc của API ở một nơi duy nhất để dễ dàng thay đổi
-  const API_BASE_URL = 'http://127.0.0.1:3004/api';
+const API_BASE_URL = 'http://127.0.0.1:3004/api';
+let docCurrentPage = 1;
+let docCurrentSearch = '';
 
 
-  // --- BƯỚC 1: KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP ---
-  const loggedInUserString = localStorage.getItem('loggedInUser');
-  if (!loggedInUserString) {
-    alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
-    // Giả sử trang login nằm ở thư mục gốc
-    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
-    return; // Dừng thực thi ngay lập tức
-  }
-
-  let loggedInUser;
-  try {
-    loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    // Kiểm tra cấu trúc tối thiểu của object user
-    if (!loggedInUser || typeof loggedInUser.id === 'undefined' || !loggedInUser.username || !loggedInUser.role) {
-      throw new Error('Dữ liệu người dùng trong localStorage không hợp lệ hoặc thiếu thông tin.');
-    }
-  } catch (error) {
-    console.error('Lỗi khi parse dữ liệu người dùng:', error);
-    localStorage.removeItem('loggedInUser'); // Xóa dữ liệu hỏng
-    alert('Phiên đăng nhập đã hết hạn hoặc không hợp lệ, vui lòng đăng nhập lại.');
-    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
-    return;
-  }
+/**
+ * Hàm chuyển đổi số byte thành chuỗi dễ đọc (KB, MB, GB ).
+ * @param {number} bytes - Kích thước tính bằng byte.
+ * @returns {string} - Chuỗi đã được định dạng.
+ */
+function formatBytes(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 
-
-  // --- BƯỚC 2: NẾU ĐĂNG NHẬP HỢP LỆ, HIỂN THỊ THÔNG TIN VÀ KHỞI TẠO CÁC THÀNH PHẦN ---
-
-  // Hiển thị lời chào
-  const userInfoSpan = document.getElementById('userId'); // Đảm bảo ID này đúng với HTML
-  if (userInfoSpan) {
-    userInfoSpan.textContent = `Xin chào, ${loggedInUser.username}`;
-
-  }
-
-
-
-  // Gọi tất cả các hàm thiết lập và truyền vào các đối số cần thiết
-  setupUserDropdown(API_BASE_URL);
-  setupProfileModal(loggedInUser, API_BASE_URL);
-  setupPasswordModal(loggedInUser, API_BASE_URL);
-  setupMyDocumentsModal(loggedInUser, API_BASE_URL);
-  setupAdminButton(loggedInUser);
-});
 
 
 // =================================================================
@@ -160,6 +130,9 @@ function setupAdminButton(user) {
 /**
  * Thiết lập modal "Thông tin cá nhân".
  */
+
+let openEditDocModal;
+
 function setupProfileModal(user, apiBaseUrl) {
   const modal = document.getElementById('profileModal');
   const openBtn = document.getElementById('profileBtn');
@@ -373,16 +346,20 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
         }
         docs.forEach(doc => {
           const tr = document.createElement('tr');
+          const fileUrl = `http://127.0.0.1:3004${doc.file_path}`;
           tr.innerHTML = `
                         <td>${doc.id}</td>
                         <td>${doc.title}</td>
                         <td>${doc.description || 'N/A'}</td>
-                        <td><a href="${doc.file_path}" target="_blank">${doc.file_name}</a></td>
+                        <td><a href="${fileUrl}" target="_blank">${doc.file_name}</a></td>
                         <td>${doc.file_name}</td>
                         <td>${doc.file_type}</td>
                         <td>${(doc.file_size / 1024).toFixed(2)} KB</td>
                         <td>${doc.category_name || 'N/A'}</td>
-                        <td><button class="btn delete-btn delete-doc-btn" data-id="${doc.id}">Xoá</button></td>
+                        <td>
+                        <button class="btn edit-btn edit-doc-btn" data-id="${doc.id}">Sửa</button>
+                        <button class="btn delete-btn delete-doc-btn" data-id="${doc.id}">Xoá</button>
+                        </td>
                     `;
           docListBody.appendChild(tr);
         });
@@ -429,6 +406,8 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
         uploadForm.file_name.value = fileData.file_name;
         uploadForm.file_size.value = fileData.file_size;
         uploadForm.file_type.value = fileData.file_type;
+
+        uploadForm.file_url = `http://127.0.0.1:3004${fileData.file_path}`;
         uploadMsg.textContent = 'Tải file thành công! Vui lòng điền các thông tin còn lại.';
         uploadMsg.style.color = '#1bb934';
       })
@@ -515,3 +494,301 @@ function setupMyDocumentsModal(user, apiBaseUrl) {
   fileInput.addEventListener('change', handleFileUpload);
   uploadForm.addEventListener('submit', handleFormSubmit);
 }
+
+function fetchDocuments(userId) {
+    const url = `${API_BASE_URL}/my-documents/${userId}`;
+    const tbody = document.querySelector('#documentTable tbody');
+    tbody.innerHTML = `<tr><td colspan="10" class="text-center">Đang tải dữ liệu...</td></tr>`;
+
+    fetch(url)
+        .then(res => {
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return res.json();
+            }
+            throw new Error('API không trả về dữ liệu dạng JSON.');
+        })
+        .then(response => {
+            console.log('Dữ liệu thực tế nhận được từ API /my-documents:', response);
+
+            if (!response || !response.success || !Array.isArray(response.data)) {
+                throw new Error('Cấu trúc dữ liệu API trả về không như mong đợi.');
+            }
+
+            const documents = response.data;
+            // document.getElementById('documentCount').textContent = documents.length;
+            tbody.innerHTML = '';
+
+            if (documents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center">Không có tài liệu nào phù hợp.</td></tr>`;
+            } else {
+                documents.forEach(doc => {
+                    const tr = document.createElement('tr');
+                    const fileUrl = `http://127.0.0.1:3004${doc.file_path}`;
+                    tr.innerHTML = `
+                        <td>${doc.id}</td>
+                        <td>${doc.title}</td>
+                        <td>${doc.description || ''}</td>
+                        <td><a href="${fileUrl}" target="_blank">Xem file</a></td>
+                        <td>${doc.file_name}</td>
+                        <td>${doc.file_type}</td>
+                        <td>${formatBytes(doc.file_size)}</td>
+                        <td>${doc.category_name || ''}</td>
+                        <td>
+                            <button class="btn edit-doc-btn" data-id="${doc.id}">Sửa</button>
+                            <button class="btn delete-doc-btn" data-id="${doc.id}">Xoá</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+            // KHÔNG renderPagination ở đây vì không có phân trang
+        })
+        .catch(err => {
+            console.error('Lỗi chi tiết trong fetchDocuments:', err);
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center-error"><b>Lỗi tải tài liệu:</b> ${err.message}</td></tr>`;
+        });
+}
+
+function setupEditDocModal() {
+    const modal = document.getElementById('editDocModal');
+    const closeBtn = document.getElementById('closeEditDocModal');
+    const form = document.getElementById('editDocForm');
+    const msg = document.getElementById('editDocMsg');
+    const fileInput = document.getElementById('editDocFile');
+
+    if (!modal || !closeBtn || !form || !msg || !fileInput) {
+        console.error("Lỗi: Không tìm thấy một hoặc nhiều phần tử của modal 'Sửa tài liệu'.");
+        return;
+    }
+
+    let originalDocData = {};
+
+    openEditDocModal = (docId) => {
+        form.reset();
+        msg.textContent = 'Đang tải dữ liệu...';
+        msg.style.color = '#333';
+        modal.style.display = 'flex';
+        form.setAttribute('data-doc-id', docId);
+
+        Promise.all([
+            fetch(`${API_BASE_URL}/categories`).then(res => res.json()),
+            fetch(`${API_BASE_URL}/documents/${docId}`).then(res => res.json())
+        ])
+            .then(([catRes, docRes]) => {
+                if (!catRes.success) throw new Error('Lỗi tải danh mục.');
+                if (!docRes.success) throw new Error('Lỗi tải chi tiết tài liệu.');
+
+                const doc = docRes.data;
+                originalDocData = doc;
+               
+
+                const catSelect = form.editDocCategory;
+                catSelect.innerHTML = '<option value="">-- Chọn danh mục --</option>';
+                catRes.data.forEach(c => catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+
+                form.editDocTitle.value = doc.title;
+                form.editDocDescription.value = doc.description || '';
+                form.editDocPath.value = doc.file_path;
+                form.editDocFileName.value = doc.file_name;
+                form.editDocType.value = doc.file_type;
+                form.editDocSize.value = formatBytes(doc.file_size);
+                catSelect.value = doc.category_id;
+
+                msg.textContent = '';
+            })
+            .catch(err => {
+                console.error("Lỗi trong openEditDocModal:", err);
+                msg.textContent = err.message;
+                msg.style.color = '#e03a3a';
+            });
+    };
+
+    const submitHandler = (e) => {
+        e.preventDefault();
+        const docId = form.getAttribute('data-doc-id');
+        const file = fileInput.files[0];
+
+        const processUpdate = (fileInfo) => {
+            const payload = {
+                title: form.editDocTitle.value.trim(),
+                description: form.editDocDescription.value.trim(),
+                category_id: form.editDocCategory.value,
+                created_by_id: getCurrentUserId(), // Lấy user hiện tại
+                ...fileInfo
+            };
+
+            msg.textContent = 'Đang cập nhật...';
+            msg.style.color = '#333';
+
+            fetch(`${API_BASE_URL}/documents/${docId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json().then(data => {
+                    if (!res.ok) throw new Error(data.error || 'Lỗi cập nhật.');
+                    return data;
+                }))
+                .then(() => {
+                    msg.textContent = 'Cập nhật thành công!';
+                    msg.style.color = '#1bb934';
+                    // Gọi lại hàm load danh sách tài liệu nếu cần
+                    // const totalPages = docRes.data.total_pages;
+                    fetchDocuments(getCurrentUserId());
+                    setTimeout(() => modal.style.display = 'none', 1000);
+                })
+                .catch(err => {
+                    msg.textContent = err.message;
+                    msg.style.color = '#e03a3a';
+                });
+        };
+
+        if (file) {
+            msg.textContent = 'Đang upload file mới...';
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData })
+                .then(res => res.json().then(data => {
+                    if (!res.ok) throw new Error(data.error || 'Lỗi upload.');
+                    if (!data.success) throw new Error(data.error);
+                    return data;
+                }))
+                .then(uploadRes => {
+                    processUpdate(uploadRes.data);
+                })
+                .catch(err => {
+                    msg.textContent = err.message;
+                    msg.style.color = '#e03a3a';
+                });
+        } else {
+            const oldFileInfo = {
+                file_path: originalDocData.file_path,
+                file_name: originalDocData.file_name,
+                file_type: originalDocData.file_type,
+                file_size: originalDocData.file_size,
+            };
+            processUpdate(oldFileInfo);
+        }
+    };
+
+    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+    form.addEventListener('submit', submitHandler);
+}
+
+
+
+
+/**
+ * Vẽ các nút phân trang cho bảng tài liệu.
+ */
+function renderPagination(current, total) {
+    const pager = document.getElementById('pagination');
+    if (!pager) return;
+    pager.innerHTML = '';
+    if (total > 1) {
+        for (let i = 1; i <= total; i++) {
+            pager.innerHTML += `<button class="page-btn" data-page="${i}" ${i === current ? 'disabled' : ''}>${i}</button>`;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Định nghĩa URL gốc của API ở một nơi duy nhất để dễ dàng thay đổi
+  const API_BASE_URL = 'http://127.0.0.1:3004/api';
+
+
+  // --- BƯỚC 1: KIỂM TRA TRẠNG THÁI ĐĂNG NHẬP ---
+  const loggedInUserString = localStorage.getItem('loggedInUser');
+  if (!loggedInUserString) {
+    alert('Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
+    // Giả sử trang login nằm ở thư mục gốc
+    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
+    return; // Dừng thực thi ngay lập tức
+  }
+
+  let loggedInUser;
+  try {
+    loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    // Kiểm tra cấu trúc tối thiểu của object user
+    if (!loggedInUser || typeof loggedInUser.id === 'undefined' || !loggedInUser.username || !loggedInUser.role) {
+      throw new Error('Dữ liệu người dùng trong localStorage không hợp lệ hoặc thiếu thông tin.');
+    }
+  } catch (error) {
+    console.error('Lỗi khi parse dữ liệu người dùng:', error);
+    localStorage.removeItem('loggedInUser'); // Xóa dữ liệu hỏng
+    alert('Phiên đăng nhập đã hết hạn hoặc không hợp lệ, vui lòng đăng nhập lại.');
+    window.location.href = '/frontend/login'; // Đảm bảo đường dẫn này chính xác
+    return;
+  }
+
+
+
+  // --- BƯỚC 2: NẾU ĐĂNG NHẬP HỢP LỆ, HIỂN THỊ THÔNG TIN VÀ KHỞI TẠO CÁC THÀNH PHẦN ---
+
+  // Hiển thị lời chào
+  const userInfoSpan = document.getElementById('userId'); // Đảm bảo ID này đúng với HTML
+  if (userInfoSpan) {
+    userInfoSpan.textContent = `Xin chào, ${loggedInUser.username}`;
+
+  }
+
+  
+
+
+  const docTable = document.getElementById('documentTable');
+    if (docTable) {
+        // Sử dụng một addEventListener duy nhất cho toàn bộ bảng tài liệu
+        docTable.addEventListener('click', (e) => {
+            const target = e.target; // Lưu lại phần tử được click để dễ sử dụng
+
+            // --- XỬ LÝ NÚT SỬA ---
+            // Kiểm tra xem phần tử được click có phải là nút "Sửa" không
+            if (target.classList.contains('edit-doc-btn')) {
+                const docId = target.dataset.id;
+                console.log(`Yêu cầu sửa tài liệu ID: ${docId}`); // Thêm log để gỡ lỗi
+
+                // Gọi hàm mở modal sửa (hàm này phải được định nghĩa trong setupEditDocModal)
+                // Giả sử bạn đã có hàm openEditDocModal như đã hướng dẫn ở lần trước.
+                openEditDocModal(docId);
+                return; // Dừng lại sau khi đã xử lý, tránh chạy các kiểm tra không cần thiết bên dưới
+            }
+
+            // --- XỬ LÝ NÚT XÓA ---
+            // Kiểm tra xem phần tử được click có phải là nút "Xóa" không
+            if (target.classList.contains('delete-doc-btn')) {
+                const docId = target.dataset.id;
+                if (confirm(`Bạn chắc chắn muốn xóa tài liệu ID ${docId}?`)) {
+                    fetch(`${API_BASE_URL}/documents/${docId}`, { method: 'DELETE' })
+                        .then(res => res.json().then(data => {
+                            // Luôn kiểm tra res.ok để bắt lỗi HTTP (4xx, 5xx)
+                            if (!res.ok) {
+                                // Ném lỗi với thông báo từ server để khối .catch() bắt được
+                                throw new Error(data.error || 'Lỗi không xác định từ server.');
+                            }
+                            return data;
+                        }))
+                        .then(() => { // Không cần dùng biến `data` ở đây
+                            alert('Xóa thành công!');
+                            // Tải lại bảng tài liệu ở trang hiện tại để giữ nguyên vị trí
+                            fetchDocuments(docCurrentPage, docCurrentSearch);
+                        })
+                        .catch(err => {
+                            // Hiển thị thông báo lỗi một cách thân thiện
+                            alert(`Lỗi khi xóa tài liệu: ${err.message}`);
+                        });
+                }
+                return; // Dừng lại sau khi đã xử lý
+            }
+        });
+    }
+
+  // Gọi tất cả các hàm thiết lập và truyền vào các đối số cần thiết
+  setupUserDropdown(API_BASE_URL);
+  setupProfileModal(loggedInUser, API_BASE_URL);
+  setupPasswordModal(loggedInUser, API_BASE_URL);
+  setupMyDocumentsModal(loggedInUser, API_BASE_URL);
+  setupAdminButton(loggedInUser);
+  setupEditDocModal();
+});

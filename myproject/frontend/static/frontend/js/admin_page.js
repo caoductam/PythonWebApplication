@@ -142,41 +142,6 @@ function fetchDocuments(page = 1, search = '') {
         });
 }
 
-function fetchCategories() {
-    fetch(`${API_BASE_URL}/categories`)
-        .then(res => res.json())
-        .then(res => {
-            if (!res.success) throw new Error(res.error);
-            const categories = res.data;
-            const tbody = document.querySelector('#categoryTable tbody');
-            tbody.innerHTML = '';
-            document.getElementById('categoryCount').textContent = categories.length;
-
-            if (categories.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Không có danh mục nào.</td></tr>`;
-            } else {
-                categories.forEach(category => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${category.id}</td>
-                        <td>${category.name}</td>
-                        <td>${category.description}</td>
-                        <td>${category.parent_id}</td>
-                        <td>
-                            <button class="btn edit-category-btn" data-id="${category.id}">Sửa</button>
-                            <button class="btn delete-category-btn" data-id="${category.id}">Xoá</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-        })
-        .catch(err => {
-            console.error('Lỗi khi tải danh sách danh mục:', err);
-            document.querySelector('#categoryTable tbody').innerHTML = `<tr><td colspan="5" class="text-center-error">Không thể tải dữ liệu danh mục!</td></tr>`;
-        });
-}
-
 
 /**
  * Vẽ các nút phân trang cho bảng tài liệu.
@@ -191,6 +156,42 @@ function renderPagination(current, total) {
         }
     }
 }
+
+function fetchCategories() {
+    fetch(`${API_BASE_URL}/categories`)
+        .then(res => res.json())
+        .then(res => {
+            if (!res.success) throw new Error(res.error);
+            const categories = res.data;
+            const tbody = document.querySelector('#categoryTable tbody');
+            tbody.innerHTML = '';
+            document.getElementById('categoryCount').textContent = categories.length;
+            if (categories.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center">Không có danh mục nào.</td></tr>`;
+            } else {
+                categories.forEach(cat => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${cat.id}</td>
+                        <td>${cat.name}</td>    
+                        <td>${cat.description || ''}</td>
+                        <td>${cat.parent_id || 'Null'}</td>
+                        <td>
+                            <button class="btn edit-cat-btn" data-id="${cat.id}">Sửa
+</button>
+                            <button class="btn delete-cat-btn" data-id="${cat.id}">Xoá</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        })
+        .catch(err => {
+            console.error('Lỗi khi tải danh sách danh mục:', err);
+            document.querySelector('#categoryTable tbody').innerHTML = `<tr><td colspan="5" class="text-center-error">Không thể tải dữ liệu danh mục!</td></tr>`;
+        });
+}
+
 
 // ==================================================
 // ===== CÁC HÀM THIẾT LẬP MODAL (SETUP) =========
@@ -434,6 +435,7 @@ function setupAddDocModal() {
  * Thiết lập cho modal "Sửa tài liệu".
  */
 let openEditDocModal;
+let openEditCategoryModal;
 
 /**
  * Thiết lập các sự kiện và logic cho modal "Sửa tài liệu".
@@ -590,22 +592,32 @@ function setupAddCategoryModal() {
     const closeBtn = document.getElementById('closeAddCategoryModal');
     const form = document.getElementById('addCategoryForm');
     const msg = document.getElementById('addCategoryMsg');
+    const parentSelect = form.addCategoryParent; // <select name="addCategoryParent" ...>
 
-    if (!modal || !openBtn || !closeBtn || !form) return;
+    if (!modal || !openBtn || !closeBtn || !form || !parentSelect) return;
+
+    // Hàm render select danh mục cha
+    function renderParentCategorySelect() {
+        parentSelect.innerHTML = '<option value="">-- Chọn danh mục cha --</option>';
+        fetch(`${API_BASE_URL}/categories`)
+            .then(res => res.json())
+            .then(res => {
+                if (!res.success) throw new Error(res.error || 'Lỗi tải danh mục.');
+                res.data.forEach(cat => {
+                    parentSelect.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+                });
+            })
+            .catch(err => {
+                parentSelect.innerHTML = '<option value="">Lỗi tải danh mục</option>';
+                msg.textContent = err.message;
+            });
+    }
 
     const openModal = () => {
         form.reset();
         msg.textContent = '';
         modal.style.display = 'flex';
-        Promise.all([
-            fetch(`${API_BASE_URL}/categories`).then(res => res.json())
-        ]).then(([catRes]) => {
-            if (!catRes.success || !userRes.success) throw new Error('Lỗi tải dữ liệu select.');
-
-            const catSelect = form.addCategoryParent;
-            catSelect.innerHTML = '<option value="">-- Chọn danh mục cha --</option>';
-            catRes.data.forEach(c => catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`);
-        }).catch(err => msg.textContent = err.message);
+        renderParentCategorySelect(); // GỌI HÀM NÀY KHI MỞ MODAL
     };
 
     const closeModal = () => modal.style.display = 'none';
@@ -633,6 +645,7 @@ function setupAddCategoryModal() {
             }))
             .then(data => {
                 msg.textContent = 'Tạo danh mục thành công!';
+                msg.style.color = '#04ad1dff';
                 fetchCategories();
                 setTimeout(closeModal, 1000);
             })
@@ -643,6 +656,101 @@ function setupAddCategoryModal() {
     closeBtn.addEventListener('click', closeModal);
     form.addEventListener('submit', submitHandler);
 }
+
+
+
+function setupEditCategoryModal() {
+    const modal = document.getElementById('editCategoryModal');
+    const closeBtn = document.getElementById('closeEditCategoryModal');
+    // const openBtn = document.getElementById('edit-cat-btn');
+    const form = document.getElementById('editCategoryForm');
+    const msg = document.getElementById('editCategoryMsg');
+    const parentSelect = form.editCategoryParent; // <select name="editCategoryParent" ...>
+
+    if (!modal || !closeBtn || !form || !msg || !parentSelect) return;
+
+    let originalCatData = {};
+
+    openEditCategoryModal = (catId) => {
+    form.reset();
+    msg.textContent = 'Đang tải dữ liệu...';
+    modal.style.display = 'flex';
+    form.setAttribute('data-cat-id', catId);
+
+    Promise.all([
+        fetch(`${API_BASE_URL}/categories`).then(res => res.json()),
+        fetch(`${API_BASE_URL}/categories/${catId}`).then(res => res.json())
+    ])
+        .then(([catRes, editCatRes]) => {
+            if (!catRes.success) throw new Error(catRes.error || 'Lỗi tải danh mục.');
+            if (!editCatRes.success) throw new Error(editCatRes.error || 'Lỗi tải danh mục cần sửa.');
+
+            originalCatData = editCatRes.data;
+
+            // Render select, loại bỏ chính nó khỏi danh sách cha
+            parentSelect.innerHTML = '<option value="">-- Chọn danh mục cha --</option>';
+            catRes.data.forEach(c => {
+                if (c.id !== originalCatData.id) { // Không cho phép chọn chính nó làm cha
+                    parentSelect.innerHTML += `<option value="${c.id}" ${c.id === originalCatData.parent_id ? 'selected' : ''}>${c.name}</option>`;
+                }
+            });
+
+            form.editCategoryName.value = originalCatData.name;
+            form.editCategoryDescription.value = originalCatData.description || '';
+            parentSelect.value = originalCatData.parent_id || null;
+
+            msg.textContent = '';
+        })
+        .catch(err => {
+            console.error("Lỗi trong openEditCategoryModal:", err);
+            msg.textContent = err.message;
+        });
+};
+
+
+    const closeModal = () => modal.style.display = 'none';
+
+    const submitHandler = (e) => {
+        e.preventDefault();
+        const catId = form.getAttribute('data-cat-id');
+        const payload = {
+            name: form.editCategoryName.value.trim(),
+            description: form.editCategoryDescription.value.trim(),
+            parent_id: form.editCategoryParent.value || null,
+        };
+        if (!payload.name) {
+            msg.textContent = 'Tên danh mục là bắt buộc.';
+            return;
+        }
+        msg.textContent = 'Đang cập nhật...';
+        fetch(`${API_BASE_URL}/categories/${catId}`, {
+            method: 'PUT',
+
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json().then(data => {
+                if (!res.ok) throw new Error(data.error || 'Lỗi cập nhật.');
+                return data;
+            }))
+            .then(() => {
+                msg.textContent = 'Cập nhật thành công!';
+                msg.style.color = '#1bb934';
+                fetchCategories(); // Tải lại danh sách danh mục
+                setTimeout(closeModal, 1000);
+            })
+            .catch(err => {
+                msg.textContent = err.message;
+                msg.style.color = '#e03a3a';
+            });
+    };
+    closeBtn.addEventListener('click', closeModal);
+    form.addEventListener('submit', submitHandler);
+}
+
+    // Gán sự kiện click cho bảng danh mục để mở modal sửa
+
+
 // ==================================================
 // ===== ĐIỂM KHỞI ĐỘNG CHÍNH (MAIN ENTRY POINT) =====
 // ==================================================
@@ -732,58 +840,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const categoryTable = document.getElementById('categoryTable');
-    if (categoryTable) {
-        // Sử dụng một addEventListener duy nhất cho toàn bộ bảng tài liệu
+    if (categoryTable) {    
         categoryTable.addEventListener('click', (e) => {
-            const target = e.target; // Lưu lại phần tử được click để dễ sử dụng
-
-            // --- XỬ LÝ NÚT SỬA ---
-            // Kiểm tra xem phần tử được click có phải là nút "Sửa" không
-            if (target.classList.contains('edit-category-btn')) {
-                const categoryId = target.dataset.id;
-                console.log(`Yêu cầu sửa danh mục ID: ${categoryId}`); // Thêm log để gỡ lỗi
-
-                // Gọi hàm mở modal sửa (hàm này phải được định nghĩa trong setupEditDocModal)
-                // Giả sử bạn đã có hàm openEditDocModal như đã hướng dẫn ở lần trước.
-                // openEditDocModal(docId);
-                return; // Dừng lại sau khi đã xử lý, tránh chạy các kiểm tra không cần thiết bên dưới
-            }
-
-            // --- XỬ LÝ NÚT XÓA ---
-            // Kiểm tra xem phần tử được click có phải là nút "Xóa" không
-            if (target.classList.contains('delete-category-btn')) {
-                const categoryId = target.dataset.id;
-                if (confirm(`Bạn chắc chắn muốn xóa danh mục ID ${categoryId}?`)) {
-                    fetch(`${API_BASE_URL}/categories/${categoryId}`, { method: 'DELETE' })
+            if (e.target.classList.contains('edit-cat-btn')) {
+                const catId = e.target.dataset.id;
+                console.log(`Yêu cầu sửa danh mục ID: ${catId}`); // Thêm log để gỡ lỗi
+                openEditCategoryModal(catId); // Gọi hàm mở modal sửa danh mục
+            } else if (e.target.classList.contains('delete-cat-btn')) {
+                const catId = e.target.dataset.id;
+                if (confirm(`Bạn chắc chắn muốn xóa danh mục ID ${catId}?`)) {
+                    fetch(`${API_BASE_URL}/categories/${catId}`, { method: 'DELETE' })
                         .then(res => res.json().then(data => {
-                            // Luôn kiểm tra res.ok để bắt lỗi HTTP (4xx, 5xx)
-                            if (!res.ok) {
-                                // Ném lỗi với thông báo từ server để khối .catch() bắt được
-                                throw new Error(data.error || 'Lỗi không xác định từ server.');
-                            }
+                            if (!res.ok) throw new Error(data.error);
                             return data;
                         }))
-                        .then(() => { // Không cần dùng biến `data` ở đây
+                        .then(data => {
                             alert('Xóa thành công!');
-                            // Tải lại bảng tài liệu ở trang hiện tại để giữ nguyên vị trí
                             fetchCategories();
                         })
-                        .catch(err => {
-                            // Hiển thị thông báo lỗi một cách thân thiện
-                            alert(`Lỗi khi xóa danh mục: ${err.message}`);
-                        });
+                        .catch(err => alert(`Lỗi: ${err.message}`));
                 }
-                return; // Dừng lại sau khi đã xử lý
             }
         });
     }
+
+    const backBtn = document.getElementById('backButton');
+    if (backBtn) {
+        backBtn.addEventListener('click', function () {
+            // Lấy user từ localStorage
+            const userStr = localStorage.getItem('loggedInUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    // Nếu là admin, chuyển về trang cá nhân admin
+                    if (user && user.role === 'Admin') {
+                        // Nếu bạn có trang cá nhân admin là /frontend/admin_home/
+                        window.location.href = `/frontend/admin_home/?id=${user.id}`;
+                        // Nếu là trang khác, đổi lại đường dẫn cho phù hợp
+                    } else {
+                        // Nếu không phải admin, chuyển về trang cá nhân mặc định
+                        window.location.href = '/frontend/profile.html';
+                    }
+                } catch (e) {
+                    // Nếu lỗi, chuyển về trang login
+                    window.location.href = '/frontend/login';
+                }
+            } else {
+                // Nếu không có user, chuyển về trang login
+                window.location.href = '/frontend/login';
+            }
+        });
+    }
+
+
 
     // --- Thiết lập các modal ---
     setupAddUserModal();
     setupEditUserModal();
     setupAddDocModal();
     setupEditDocModal();
-    // setupAddCategoryModal();
+    setupAddCategoryModal();
+    setupEditCategoryModal();
 
     // --- Tải dữ liệu ban đầu ---
     fetchUsers();

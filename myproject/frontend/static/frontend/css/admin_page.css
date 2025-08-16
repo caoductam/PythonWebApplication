@@ -155,8 +155,8 @@ tr:last-child {
 .add-doc-btn,
 .add-user-btn,
 .edit-user-btn,
-.add-category-btn,
-.edit-category-btn {
+.add-cat-btn,
+.edit-cat-btn {
   /* background: #e0e7ff;
   color: #3a5cff; */
   background-color: #3a5cff;
@@ -170,8 +170,8 @@ tr:last-child {
 .add-doc-btn:hover,
 .add-user-btn:hover,
 .edit-user-btn:hover,
-.add-category-btn:hover,
-.edit-category-btn:hover {
+.add-cat-btn:hover,
+.edit-cat-btn:hover {
   background: #102fc9;
 }
 
@@ -179,7 +179,7 @@ tr:last-child {
 .delete-btn,
 .delete-doc-btn,
 .delete-user-btn,
-.delete-category-btn {
+.delete-cat-btn {
   background: rgb(246, 39, 39);
   color: #fff;
   margin-top: 2px;
@@ -190,7 +190,7 @@ tr:last-child {
 .delete-btn:hover,
 .delete-doc-btn:hover,
 .delete-user-btn:hover,
-.delete-category-btn:hover {
+.delete-btn:hover {
   background: rgb(184, 32, 32);
 }
 
@@ -418,4 +418,24 @@ tr:last-child {
   height: 18px;
   margin: 0;
   /* Bỏ margin mặc định */
+}
+
+.pagination {
+  margin: 16px 0 0 0;
+  text-align: center;
+}
+.pagination .page-btn {
+  margin: 0 2px;
+  padding: 4px 10px;
+  border: 1px solid #1976d2;
+  background: #fff;
+  color: #1976d2;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.pagination .page-btn:disabled {
+  background: #1976d2;
+  color: #fff;
+  cursor: default;
 }

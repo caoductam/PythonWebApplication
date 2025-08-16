@@ -893,7 +893,7 @@ body {
     width: 95%;
     border-collapse: collapse;
     margin-bottom: 12px;
-    max-height: 500px;
+    max-height: 450px;
     overflow-y: auto;
 
 }
@@ -946,23 +946,29 @@ body {
     text-decoration: none;
 }
 
-.edit-btn {
+.edit-btn,
+.edit-doc-btn {
     background: #eaf0ff;
     color: #3358e0;
+    margin-bottom: 2px;
 }
 
-.edit-btn:hover {
+.edit-btn:hover,
+.edit-doc-btn:hover {
     background: #3358e0;
     color: #fff;
     transform: scale(1.05);
 }
 
-.delete-btn {
+.delete-btn,
+.delete-doc-btn {
     background: #ffeaea;
     color: #e03a3a;
+    margin-top: 2px;
 }
 
-.delete-btn:hover {
+.delete-btn:hover,
+.delete-doc-btn:hover {
     background: #e03a3a;
     color: #fff;
     transform: scale(1.05);
